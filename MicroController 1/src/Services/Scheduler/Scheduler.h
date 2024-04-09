@@ -69,6 +69,16 @@ void Sched_init(void);
  */
 void Sched_start(void);
 
+/**
+ * @brief Get the current tick count.
+ * 
+ * This function returns the current tick count, which represents the number
+ * of ticks that have occurred since the scheduler was started or since the
+ * tick count was last reset.
+ * 
+ * @return uint64_t The current tick count.
+ */
+uint64_t Sched_getTickCount(void);
 
 
 

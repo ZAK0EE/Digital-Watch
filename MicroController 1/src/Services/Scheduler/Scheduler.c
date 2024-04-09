@@ -62,6 +62,15 @@ extern Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES];
  */
 static uint32_t PendingTicks = 1;
 
+
+/**
+ * @brief Variable to track the number of ticks elapsed since the scheduler started.
+ * 
+ * This variable represents the number of ticks that have elapsed since the scheduler
+ * was initialized or started.
+ */
+static uint64_t TickCount = 0;
+
 /**
  * @brief Array to store runtime information for each runnable task.
  * 
@@ -83,6 +92,7 @@ static RunnableInfo_t rinfo[_NUM_OF_RUNNABLES];
 static void TickCallBack(void)
 {
 	PendingTicks++;
+	TickCount++;
 }
 
 /**
@@ -150,4 +160,9 @@ void Sched_start(void)
 			Scheduler();
 		}
 	}
+}
+
+uint64_t Sched_getTickCount(void)
+{
+	return TickCount;
 }
