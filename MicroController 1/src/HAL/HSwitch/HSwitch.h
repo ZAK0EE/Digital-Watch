@@ -28,7 +28,7 @@
 typedef struct
 {
 	uint32_t  Pin;
-	void* 	  Port;
+	uint32_t  Port;
 	uint32_t  Connection;
 }HSwitch_Config_t;
 

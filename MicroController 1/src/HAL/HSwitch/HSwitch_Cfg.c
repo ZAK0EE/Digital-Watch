@@ -16,12 +16,12 @@
  *                                Definitions                                  *
  *******************************************************************************/
 /********************Macros for the HSwitch Ports********************/
-#define HSwitch_PORTA  	(void *)(0x40020000)
-#define HSwitch_PORTB	(void *)(0x40020400)
-#define HSwitch_PORTC  	(void *)(0x40020800)
-#define HSwitch_PORTD 	(void *)(0x40020C00)
-#define HSwitch_PORTE 	(void *)(0x40021000)
-#define HSwitch_PORTH	(void *)(0x40021C00)
+#define HSwitch_PORTA  	0
+#define HSwitch_PORTB	1
+#define HSwitch_PORTC  	2
+#define HSwitch_PORTD 	3
+#define HSwitch_PORTE 	4
+#define HSwitch_PORTH	5
 
 /********************Macros for the HSwitch Pins********************/
 #define HSwitch_PIN0 	0x00000000

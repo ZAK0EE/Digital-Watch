@@ -36,20 +36,20 @@ Error_enumStatus_t HSwitch_Init(void)
     Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
     /*Creat an object from  GPIO_Config_t sturct to configure the GPIO
       Peripheral according to user configuration for privided HSwitchs*/
-    GPIO_Config_t Loc_HSwitch_GPIO_Handler;
+    GPIO_PinConfig_t Loc_HSwitch_GPIO_Handler;
     /*Initiate a local index to loop with it */
     uint8_t Loc_idx = 0;
     /*Loop for each HSwitch to configure it's port and pin in GPIO*/
     for (Loc_idx = 0; Loc_idx < _HSwitch_Num; Loc_idx++)
     {
         /*Send the Pin of HSwitch number Loc_idx to configuartion structure in gpio*/
-        Loc_HSwitch_GPIO_Handler.Pin = HSwitchS[Loc_idx].Pin;
+        Loc_HSwitch_GPIO_Handler.PinNumber = HSwitchS[Loc_idx].Pin;
         /*Send the Port of HSwitch number Loc_idx to configuartion structure in gpio*/
         Loc_HSwitch_GPIO_Handler.Port = HSwitchS[Loc_idx].Port;
         /*Send the Mood of HSwitch number Loc_idx to configuartion structure in gpio*/
-        Loc_HSwitch_GPIO_Handler.Mood = HSwitchS[Loc_idx].Connection;
+        Loc_HSwitch_GPIO_Handler.PinMode = HSwitchS[Loc_idx].Connection;
         /*Init GPIO pins with the required configuration */
-        Loc_enumReturnStatus = GPIO_InitPin(&Loc_HSwitch_GPIO_Handler);
+        Loc_enumReturnStatus = GPIO_initPin(&Loc_HSwitch_GPIO_Handler);
     }
     /*Return the error status*/
     return Loc_enumReturnStatus;
@@ -104,7 +104,7 @@ void HSwitch_Runnable(void)
     for (idx = 0; idx < _HSwitch_Num; idx++)
     {
         /* Get current state of the switch */
-        GPIO_Get_GetPinValue(HSwitchS[idx].Port, HSwitchS[idx].Pin, &current);
+        current = GPIO_getPinValue(HSwitchS[idx].Port, HSwitchS[idx].Pin);
         /* Check if current state is same as previous state */
         if (current == prev[idx])
         {

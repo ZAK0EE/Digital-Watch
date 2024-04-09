@@ -1,0 +1,44 @@
+{
+	"folders": [
+		{
+			"path": "../../../Repo/ARM-stm32f401-CortexM4/STM32MAIN"
+		},
+		{
+			"name": "MicroController 1",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"led.h": "c",
+			"switch.h": "c",
+			"rcc.h": "c",
+			"NVEC.C": "cpp",
+			"NVIC.C": "cpp",
+			"std_types.h": "c",
+			"error.h": "c",
+			"stk_cfg.h": "c",
+			"runnablelist_cfg.h": "c",
+			"scheduler.h": "c",
+			"stk.h": "c",
+			"clk_control.h": "c",
+			"trafficlight.h": "c",
+			"gpio.h": "c",
+			"lcd_cfg.h": "c",
+			"atomic": "c",
+			"cstdint": "c",
+			"led_cfg.h": "c",
+			"lcd.h": "c",
+			"array": "c",
+			"string": "c",
+			"string_view": "c",
+			"nvic.h": "c",
+			"stm32f401cc.h": "c",
+			"usart_cfg.h": "c",
+			"ctrmain.h": "c",
+			"usart.h": "c",
+			"hswitch_cfg.h": "c",
+			"hswitch.h": "c"
+		}
+	}
+}
