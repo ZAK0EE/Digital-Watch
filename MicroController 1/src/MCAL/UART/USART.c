@@ -74,9 +74,9 @@ extern const USART_Config_t USARTS[_USART_Num];
 volatile void *const USART[UART_NUMS_IN_TARGET] = {USART1_BA, USART2_BA, USART6_BA};
 static USART_TxReq_t TxReq[_USART_Num];
 static USART_RXReq_t RxReq[_USART_Num];
-uint8_t LOC_UART1_idx;
-uint8_t LOC_UART2_idx;
-uint8_t LOC_UART6_idx;
+uint8_t g_UART1_idx;
+uint8_t g_UART2_idx;
+uint8_t g_UART6_idx;
 /*******************************************************************************
  *                             Implementation                                   *
  *******************************************************************************/
@@ -169,13 +169,13 @@ Error_enumStatus_t USART_Init(void)
             switch (USARTS[Loc_idx].USART_ID)
             {
             case USART1_ID:
-                LOC_UART1_idx = Loc_idx;
+                g_UART1_idx = Loc_idx;
                 break;
             case USART2_ID:
-                LOC_UART2_idx = Loc_idx;
+                g_UART2_idx = Loc_idx;
                 break;
             case USART6_ID:
-                LOC_UART6_idx = Loc_idx;
+                g_UART6_idx = Loc_idx;
                 break;
             default:
                 Loc_enumReturnStatus = Status_enumNotOk;
@@ -215,13 +215,13 @@ Error_enumStatus_t USART_TxBufferAsyncZeroCopy(USART_UserReq_t *Ptr_UserReq)
         switch (Ptr_UserReq->USART_ID)
         {
         case USART1_ID:
-            Loc_Reqidx = LOC_UART1_idx;
+            Loc_Reqidx = g_UART1_idx;
             break;
         case USART2_ID:
-            Loc_Reqidx = LOC_UART2_idx;
+            Loc_Reqidx = g_UART2_idx;
             break;
         case USART6_ID:
-            Loc_Reqidx = LOC_UART6_idx;
+            Loc_Reqidx = g_UART6_idx;
             break;
         default:
             Loc_enumReturnStatus = Status_enumNotOk;
@@ -274,13 +274,13 @@ Error_enumStatus_t USART_RxBufferAsyncZeroCopy(USART_UserReq_t *Ptr_UserReq)
         switch (Ptr_UserReq->USART_ID)
         {
         case USART1_ID:
-            Loc_Reqidx = LOC_UART1_idx;
+            Loc_Reqidx = g_UART1_idx;
             break;
         case USART2_ID:
-            Loc_Reqidx = LOC_UART2_idx;
+            Loc_Reqidx = g_UART2_idx;
             break;
         case USART6_ID:
-            Loc_Reqidx = LOC_UART6_idx;
+            Loc_Reqidx = g_UART6_idx;
             break;
         default:
             Loc_enumReturnStatus = Status_enumNotOk;
@@ -336,13 +336,13 @@ Error_enumStatus_t USART_SendByte(USART_UserReq_t *Ptr_UserReq)
         switch (Ptr_UserReq->USART_ID)
         {
         case USART1_ID:
-            Loc_Reqidx = LOC_UART1_idx;
+            Loc_Reqidx = g_UART1_idx;
             break;
         case USART2_ID:
-            Loc_Reqidx = LOC_UART2_idx;
+            Loc_Reqidx = g_UART2_idx;
             break;
         case USART6_ID:
-            Loc_Reqidx = LOC_UART6_idx;
+            Loc_Reqidx = g_UART6_idx;
             break;
         default:
             Loc_enumReturnStatus = Status_enumNotOk;
@@ -405,13 +405,13 @@ Error_enumStatus_t USART_GetByte(USART_UserReq_t *Ptr_UserReq)
         switch (Ptr_UserReq->USART_ID)
         {
         case USART1_ID:
-            Loc_Reqidx = LOC_UART1_idx;
+            Loc_Reqidx = g_UART1_idx;
             break;
         case USART2_ID:
-            Loc_Reqidx = LOC_UART2_idx;
+            Loc_Reqidx = g_UART2_idx;
             break;
         case USART6_ID:
-            Loc_Reqidx = LOC_UART6_idx;
+            Loc_Reqidx = g_UART6_idx;
             break;
         default:
             Loc_enumReturnStatus = Status_enumNotOk;
@@ -479,13 +479,13 @@ Error_enumStatus_t USART_TxDone(uint8_t USART_ID, uint8_t *Ptr_Status)
         switch (USART_ID)
         {
         case USART1_ID:
-            Loc_Reqidx = LOC_UART1_idx;
+            Loc_Reqidx = g_UART1_idx;
             break;
         case USART2_ID:
-            Loc_Reqidx = LOC_UART2_idx;
+            Loc_Reqidx = g_UART2_idx;
             break;
         case USART6_ID:
-            Loc_Reqidx = LOC_UART6_idx;
+            Loc_Reqidx = g_UART6_idx;
             break;
         default:
             Loc_enumReturnStatus = Status_enumNotOk;
@@ -529,13 +529,13 @@ Error_enumStatus_t USART_IsRx(uint8_t USART_ID, uint8_t *Ptr_Status)
         switch (USART_ID)
         {
         case USART1_ID:
-            Loc_Reqidx = LOC_UART1_idx;
+            Loc_Reqidx = g_UART1_idx;
             break;
         case USART2_ID:
-            Loc_Reqidx = LOC_UART2_idx;
+            Loc_Reqidx = g_UART2_idx;
             break;
         case USART6_ID:
-            Loc_Reqidx = LOC_UART6_idx;
+            Loc_Reqidx = g_UART6_idx;
             break;
         default:
             Loc_enumReturnStatus = Status_enumNotOk;
@@ -564,50 +564,50 @@ Error_enumStatus_t USART_IsRx(uint8_t USART_ID, uint8_t *Ptr_Status)
 void USART1_IRQHandler(void)
 {
     /* Local Variable to store CR1 value */
-    uint32_t Lo_CR1_Value = ((USART_PERI_t *)USART[LOC_UART1_idx])->USART_CR1;
+    uint32_t Lo_CR1_Value = ((USART_PERI_t *)USART[g_UART1_idx])->USART_CR1;
 
     /* Check if USART transmission is empty */
-    if ((((USART_PERI_t *)USART[LOC_UART1_idx])->USART_SR) & UART_TX_EMPTY_FLAG)
+    if ((((USART_PERI_t *)USART[g_UART1_idx])->USART_SR) & UART_TX_EMPTY_FLAG)
     {
         /* Check if there are more bytes to transmit */
-        if ((TxReq[LOC_UART1_idx].buffer.Pos) < (TxReq[LOC_UART1_idx].buffer.size))
+        if ((TxReq[g_UART1_idx].buffer.Pos) < (TxReq[g_UART1_idx].buffer.size))
         {
             /* Transmit the next byte */
-            ((USART_PERI_t *)USART[LOC_UART1_idx])->USART_DR = TxReq[LOC_UART1_idx].buffer.data[TxReq[LOC_UART1_idx].buffer.Pos];
-            TxReq[LOC_UART1_idx].buffer.Pos++;
+            ((USART_PERI_t *)USART[g_UART1_idx])->USART_DR = TxReq[g_UART1_idx].buffer.data[TxReq[g_UART1_idx].buffer.Pos];
+            TxReq[g_UART1_idx].buffer.Pos++;
         }
         else
         {
             /* Disable TXE interrupt */
             Lo_CR1_Value &= ~(UART_TXE_ENABLE_MASK);
-            TxReq[LOC_UART1_idx].state = USART_ReqReady;
-            ((USART_PERI_t *)USART[LOC_UART1_idx])->USART_CR1 = Lo_CR1_Value;
+            TxReq[g_UART1_idx].state = USART_ReqReady;
+            ((USART_PERI_t *)USART[g_UART1_idx])->USART_CR1 = Lo_CR1_Value;
             /* Call callback function if available */
-            if (TxReq[LOC_UART1_idx].CB)
+            if (TxReq[g_UART1_idx].CB)
             {
-                TxReq[LOC_UART1_idx].CB();
+                TxReq[g_UART1_idx].CB();
             }
         }
     }
     /* Check if USART reception is not empty */
-    if ((((USART_PERI_t *)USART[LOC_UART1_idx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG)
+    if ((((USART_PERI_t *)USART[g_UART1_idx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG)
     {
         /* Check if there are more bytes to receive */
-        if (RxReq[LOC_UART1_idx].buffer.Pos < RxReq[LOC_UART1_idx].buffer.size)
+        if (RxReq[g_UART1_idx].buffer.Pos < RxReq[g_UART1_idx].buffer.size)
         {
             /* Receive the next byte */
-            RxReq[LOC_UART1_idx].buffer.data[RxReq[LOC_UART1_idx].buffer.Pos] = ((USART_PERI_t *)USART[LOC_UART1_idx])->USART_DR;
-            RxReq[LOC_UART1_idx].buffer.Pos++;
+            RxReq[g_UART1_idx].buffer.data[RxReq[g_UART1_idx].buffer.Pos] = ((USART_PERI_t *)USART[g_UART1_idx])->USART_DR;
+            RxReq[g_UART1_idx].buffer.Pos++;
             /* Check if all bytes are received */
-            if (RxReq[LOC_UART1_idx].buffer.Pos == RxReq[LOC_UART1_idx].buffer.size)
+            if (RxReq[g_UART1_idx].buffer.Pos == RxReq[g_UART1_idx].buffer.size)
             {
-                RxReq[LOC_UART1_idx].state = USART_ReqReady;
+                RxReq[g_UART1_idx].state = USART_ReqReady;
                 /* Disable RXE interrupt */
-                ((USART_PERI_t *)USART[LOC_UART1_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
+                ((USART_PERI_t *)USART[g_UART1_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
                 /* Call callback function if available */
-                if (RxReq[LOC_UART1_idx].CB)
+                if (RxReq[g_UART1_idx].CB)
                 {
-                    RxReq[LOC_UART1_idx].CB();
+                    RxReq[g_UART1_idx].CB();
                 }
             }
         }
@@ -622,50 +622,50 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
     /* Local Variable to store CR1 value */
-    uint32_t Lo_CR1_Value = ((USART_PERI_t *)USART[LOC_UART2_idx])->USART_CR1;
+    uint32_t Lo_CR1_Value = ((USART_PERI_t *)USART[g_UART2_idx])->USART_CR1;
 
     /* Check if USART transmission is empty */
-    if ((((USART_PERI_t *)USART[LOC_UART2_idx])->USART_SR) & UART_TX_EMPTY_FLAG)
+    if ((((USART_PERI_t *)USART[g_UART2_idx])->USART_SR) & UART_TX_EMPTY_FLAG)
     {
         /* Check if there are more bytes to transmit */
-        if ((TxReq[LOC_UART2_idx].buffer.Pos) < (TxReq[LOC_UART2_idx].buffer.size))
+        if ((TxReq[g_UART2_idx].buffer.Pos) < (TxReq[g_UART2_idx].buffer.size))
         {
             /* Transmit the next byte */
-            ((USART_PERI_t *)USART[LOC_UART2_idx])->USART_DR = TxReq[LOC_UART2_idx].buffer.data[TxReq[LOC_UART2_idx].buffer.Pos];
-            TxReq[LOC_UART2_idx].buffer.Pos++;
+            ((USART_PERI_t *)USART[g_UART2_idx])->USART_DR = TxReq[g_UART2_idx].buffer.data[TxReq[g_UART2_idx].buffer.Pos];
+            TxReq[g_UART2_idx].buffer.Pos++;
         }
         else
         {
             /* Disable TXE interrupt */
             Lo_CR1_Value &= ~(UART_TXE_ENABLE_MASK);
-            TxReq[LOC_UART2_idx].state = USART_ReqReady;
-            ((USART_PERI_t *)USART[LOC_UART2_idx])->USART_CR1 = Lo_CR1_Value;
+            TxReq[g_UART2_idx].state = USART_ReqReady;
+            ((USART_PERI_t *)USART[g_UART2_idx])->USART_CR1 = Lo_CR1_Value;
             /* Call callback function if available */
-            if (TxReq[LOC_UART2_idx].CB)
+            if (TxReq[g_UART2_idx].CB)
             {
-                TxReq[LOC_UART2_idx].CB();
+                TxReq[g_UART2_idx].CB();
             }
         }
     }
     /* Check if USART reception is not empty */
-    if ((((USART_PERI_t *)USART[LOC_UART2_idx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG)
+    if ((((USART_PERI_t *)USART[g_UART2_idx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG)
     {
         /* Check if there are more bytes to receive */
-        if (RxReq[LOC_UART2_idx].buffer.Pos < RxReq[LOC_UART2_idx].buffer.size)
+        if (RxReq[g_UART2_idx].buffer.Pos < RxReq[g_UART2_idx].buffer.size)
         {
             /* Receive the next byte */
-            RxReq[LOC_UART2_idx].buffer.data[RxReq[LOC_UART2_idx].buffer.Pos] = ((USART_PERI_t *)USART[LOC_UART2_idx])->USART_DR;
-            RxReq[LOC_UART2_idx].buffer.Pos++;
+            RxReq[g_UART2_idx].buffer.data[RxReq[g_UART2_idx].buffer.Pos] = ((USART_PERI_t *)USART[g_UART2_idx])->USART_DR;
+            RxReq[g_UART2_idx].buffer.Pos++;
             /* Check if all bytes are received */
-            if (RxReq[LOC_UART2_idx].buffer.Pos == RxReq[LOC_UART2_idx].buffer.size)
+            if (RxReq[g_UART2_idx].buffer.Pos == RxReq[g_UART2_idx].buffer.size)
             {
-                RxReq[LOC_UART2_idx].state = USART_ReqReady;
+                RxReq[g_UART2_idx].state = USART_ReqReady;
                 /* Disable RXE interrupt */
-                ((USART_PERI_t *)USART[LOC_UART2_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
+                ((USART_PERI_t *)USART[g_UART2_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
                 /* Call callback function if available */
-                if (RxReq[LOC_UART2_idx].CB)
+                if (RxReq[g_UART2_idx].CB)
                 {
-                    RxReq[LOC_UART2_idx].CB();
+                    RxReq[g_UART2_idx].CB();
                 }
             }
         }
@@ -680,50 +680,50 @@ void USART2_IRQHandler(void)
 void USART6_IRQHandler(void)
 {
     /* Local Variable to store CR1 value */
-    uint32_t Lo_CR1_Value = ((USART_PERI_t *)USART[LOC_UART6_idx])->USART_CR1;
+    uint32_t Lo_CR1_Value = ((USART_PERI_t *)USART[g_UART6_idx])->USART_CR1;
 
     /* Check if USART transmission is empty */
-    if ((((USART_PERI_t *)USART[LOC_UART6_idx])->USART_SR) & UART_TX_EMPTY_FLAG)
+    if ((((USART_PERI_t *)USART[g_UART6_idx])->USART_SR) & UART_TX_EMPTY_FLAG)
     {
         /* Check if there are more bytes to transmit */
-        if ((TxReq[LOC_UART6_idx].buffer.Pos) < (TxReq[LOC_UART6_idx].buffer.size))
+        if ((TxReq[g_UART6_idx].buffer.Pos) < (TxReq[g_UART6_idx].buffer.size))
         {
             /* Transmit the next byte */
-            ((USART_PERI_t *)USART[LOC_UART6_idx])->USART_DR = TxReq[LOC_UART6_idx].buffer.data[TxReq[LOC_UART6_idx].buffer.Pos];
-            TxReq[LOC_UART6_idx].buffer.Pos++;
+            ((USART_PERI_t *)USART[g_UART6_idx])->USART_DR = TxReq[g_UART6_idx].buffer.data[TxReq[g_UART6_idx].buffer.Pos];
+            TxReq[g_UART6_idx].buffer.Pos++;
         }
         else
         {
             /* Disable TXE interrupt */
             Lo_CR1_Value &= ~(UART_TXE_ENABLE_MASK);
-            TxReq[LOC_UART6_idx].state = USART_ReqReady;
-            ((USART_PERI_t *)USART[LOC_UART6_idx])->USART_CR1 = Lo_CR1_Value;
+            TxReq[g_UART6_idx].state = USART_ReqReady;
+            ((USART_PERI_t *)USART[g_UART6_idx])->USART_CR1 = Lo_CR1_Value;
             /* Call callback function if available */
-            if (TxReq[LOC_UART6_idx].CB)
+            if (TxReq[g_UART6_idx].CB)
             {
-                TxReq[LOC_UART6_idx].CB();
+                TxReq[g_UART6_idx].CB();
             }
         }
     }
     /* Check if USART reception is not empty */
-    if ((((USART_PERI_t *)USART[LOC_UART6_idx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG)
+    if ((((USART_PERI_t *)USART[g_UART6_idx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG)
     {
         /* Check if there are more bytes to receive */
-        if (RxReq[LOC_UART6_idx].buffer.Pos < RxReq[LOC_UART6_idx].buffer.size)
+        if (RxReq[g_UART6_idx].buffer.Pos < RxReq[g_UART6_idx].buffer.size)
         {
             /* Receive the next byte */
-            RxReq[LOC_UART6_idx].buffer.data[RxReq[LOC_UART6_idx].buffer.Pos] = ((USART_PERI_t *)USART[LOC_UART6_idx])->USART_DR;
-            RxReq[LOC_UART6_idx].buffer.Pos++;
+            RxReq[g_UART6_idx].buffer.data[RxReq[g_UART6_idx].buffer.Pos] = ((USART_PERI_t *)USART[g_UART6_idx])->USART_DR;
+            RxReq[g_UART6_idx].buffer.Pos++;
             /* Check if all bytes are received */
-            if (RxReq[LOC_UART6_idx].buffer.Pos == RxReq[LOC_UART6_idx].buffer.size)
+            if (RxReq[g_UART6_idx].buffer.Pos == RxReq[g_UART6_idx].buffer.size)
             {
-                RxReq[LOC_UART6_idx].state = USART_ReqReady;
+                RxReq[g_UART6_idx].state = USART_ReqReady;
                 /* Disable RXE interrupt */
-                ((USART_PERI_t *)USART[LOC_UART6_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
+                ((USART_PERI_t *)USART[g_UART6_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
                 /* Call callback function if available */
-                if (RxReq[LOC_UART6_idx].CB)
+                if (RxReq[g_UART6_idx].CB)
                 {
-                    RxReq[LOC_UART6_idx].CB();
+                    RxReq[g_UART6_idx].CB();
                 }
             }
         }
