@@ -220,4 +220,16 @@ MCAL_Status_t GPIO_setPinValue(GPIO_Port_t Port, GPIO_Pin_t PinNumber, GPIO_PinS
  */
 GPIO_PinState_t GPIO_getPinValue(GPIO_Port_t Port, GPIO_Pin_t PinNumber);
 
+/**
+ * @brief Sets the alternate function for a GPIO pin.
+ * 
+ * @param Port: GPIO port to which the pin belongs.
+ * @param PinNumber: Pin number for which the alternate function is set.
+ * @param AFNumber: Alternate function number to set for the pin.
+ * @return MCAL_Status_t: Status of the operation.
+ *         - MCAL_OK: Pin alternate function set successfully.
+ *         - MCAL_ERROR: An error occurred during the operation.
+ */
+MCAL_Status_t GPIO_setPinAF(GPIO_Port_t Port, GPIO_Pin_t PinNumber,  GPIO_AF_NUM_t AFNumber);
+
 #endif // MCAL_GPIO_GPIO_H_

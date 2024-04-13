@@ -179,7 +179,7 @@ GPIO_PinState_t GPIO_getPinValue(GPIO_Port_t Port, GPIO_Pin_t PinNumber)
 }
 
 
-MCAL_Status_t GPIO_CFG_AlternativeFunction(GPIO_Port_t Port, GPIO_Pin_t PinNumber,  GPIO_AF_NUM_t AFNumber) 
+MCAL_Status_t GPIO_setPinAF(GPIO_Port_t Port, GPIO_Pin_t PinNumber,  GPIO_AF_NUM_t AFNumber) 
 {
     assert_param(IS_GPIO_PORT(Port));
     assert_param(IS_GPIO_PIN(PinNumber));
@@ -187,21 +187,13 @@ MCAL_Status_t GPIO_CFG_AlternativeFunction(GPIO_Port_t Port, GPIO_Pin_t PinNumbe
 
     GPIO_TypeDef volatile *const GPIO = GPIOS[Port];
 
-    uint32_t AFRL_value = 0 ;
-
-    if (PinNumber <= GPIO_AF_NUM_7)
+    if (AFNumber <= GPIO_AF_NUM_7)
     {   
-        AFRL_value = GPIO->AFRL ;
-        AFRL_value &= ~(GPIO_AF_CLR_MASK<<(PinNumber*4));
-        AFRL_value |= (AFNumber<<(PinNumber*4));
-        GPIO->AFRL = AFRL_value ;
+        GPIO->AFRL = (GPIO->AFRL & ~(GPIO_AF_CLR_MASK<<(PinNumber*4))) | (AFNumber<<(PinNumber*4));
     }
     else
     {
-        AFRL_value = GPIO->AFRH ;
-        AFRL_value &= ~(GPIO_AF_CLR_MASK<<((PinNumber-8)*4));
-        AFRL_value |= (AFNumber<<((PinNumber-8)*4));
-        GPIO->AFRH = AFRL_value ;
+        GPIO->AFRH = (GPIO->AFRL & ~(GPIO_AF_CLR_MASK<<((PinNumber-8)*4))) | (AFNumber<<((PinNumber-8)*4));
     }
     return MCAL_OK;
 }
