@@ -71,6 +71,29 @@ typedef enum
 } GPIO_Pin_t;
 
 /**
+ * @brief Enumeration of alternate function numbers.
+ */
+typedef enum
+{
+    GPIO_AF_NUM_0 = 0,   /**< Alternate function 0. */
+    GPIO_AF_NUM_1,       /**< Alternate function 1. */
+    GPIO_AF_NUM_2,       /**< Alternate function 2. */
+    GPIO_AF_NUM_3,       /**< Alternate function 3. */
+    GPIO_AF_NUM_4,       /**< Alternate function 4. */
+    GPIO_AF_NUM_5,       /**< Alternate function 5. */
+    GPIO_AF_NUM_6,       /**< Alternate function 6. */
+    GPIO_AF_NUM_7,       /**< Alternate function 7. */
+    GPIO_AF_NUM_8,       /**< Alternate function 8. */
+    GPIO_AF_NUM_9,       /**< Alternate function 9. */
+    GPIO_AF_NUM_10,      /**< Alternate function 10. */
+    GPIO_AF_NUM_11,      /**< Alternate function 11. */
+    GPIO_AF_NUM_12,      /**< Alternate function 12. */
+    GPIO_AF_NUM_13,      /**< Alternate function 13. */
+    GPIO_AF_NUM_14,      /**< Alternate function 14. */
+    GPIO_AF_NUM_15,      /**< Alternate function 15. */
+} GPIO_AF_NUM_t;
+
+/**
  * @brief Enumeration defining GPIO pin modes, pull configurations, and output types.
  *
  * This enumeration provides constants for configuring GPIO pin modes, pull configurations, and output types.
