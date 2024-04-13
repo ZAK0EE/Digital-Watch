@@ -19,6 +19,7 @@
 /********************************************************************************************************/
 #define MASK_1BIT  (0x1UL)
 #define MASK_2BITS (0X3UL)
+#define GPIO_AF_CLR_MASK 0x0000000F
 
 #define GPIO_PINMODE_GET_MODE(PinMode) (PinMode & 0x00FUL)
 #define GPIO_PINMODE_GET_PULL(PinMode) ((PinMode & 0x0F0UL) >> 4)
@@ -73,6 +74,8 @@
 
 #define IS_GPIO_PIN_STATE(STATE) (((STATE) == GPIO_PINSTATE_RESET) || \
                                   ((STATE) == GPIO_PINSTATE_SET))
+
+#define IS_GPIO_AF_NUM(AFNUM) (((AFNUM) >= GPIO_AF_NUM_0) && ((AFNUM) <= GPIO_AF_NUM_15))
 
 /********************************************************************************************************/
 /************************************************Types***************************************************/
@@ -174,3 +177,25 @@ GPIO_PinState_t GPIO_getPinValue(GPIO_Port_t Port, GPIO_Pin_t PinNumber)
 
     return PinValue;
 }
+
+
+MCAL_Status_t GPIO_setPinAF(GPIO_Port_t Port, GPIO_Pin_t PinNumber,  GPIO_AF_NUM_t AFNumber) 
+{
+    assert_param(IS_GPIO_PORT(Port));
+    assert_param(IS_GPIO_PIN(PinNumber));
+    assert_param(IS_GPIO_AF_NUM(AFNumber));
+
+    GPIO_TypeDef volatile *const GPIO = GPIOS[Port];
+
+    if (AFNumber <= GPIO_AF_NUM_7)
+    {   
+        GPIO->AFRL = (GPIO->AFRL & ~(GPIO_AF_CLR_MASK<<(PinNumber*4))) | (AFNumber<<(PinNumber*4));
+    }
+    else
+    {
+        GPIO->AFRH = (GPIO->AFRL & ~(GPIO_AF_CLR_MASK<<((PinNumber-8)*4))) | (AFNumber<<((PinNumber-8)*4));
+    }
+    return MCAL_OK;
+}
+    
+
