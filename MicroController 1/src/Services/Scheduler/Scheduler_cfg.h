@@ -23,7 +23,7 @@
 /**
  * @brief Time interval for the scheduler tick in milliseconds.
  */
-#define SCHED_TICK_TIMEMS 1
+#define SCHED_TICK_TIMEMS 2
 
 
 /********************************************************************************************************/
