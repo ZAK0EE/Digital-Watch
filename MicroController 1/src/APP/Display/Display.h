@@ -67,7 +67,7 @@ void Display_setCursorAsync(uint8_t column, uint8_t row);
 /**
  * @brief Clears the content displayed on the screen.
  */
-void Display_clear(void);
+void Display_clearScreenAsync(void);
 
 
 #endif // APP_DISPLAY_DISPLAY_H_
