@@ -32,6 +32,11 @@
  */
 #define DISPLAY_PERIODIC_CALLMS 1
 
+/**
+ * @brief Time interval in milliseconds between display refresh cycles.
+ */
+#define DISPLAY_REFRESH_RATEMS 100
+
 
 
 /********************************************************************************************************/
