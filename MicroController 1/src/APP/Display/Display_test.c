@@ -1,3 +1,5 @@
+#ifdef DISPLAY_TEST
+
 #include "APP/Display/Display.h"
 #include "HAL/LCD/LCD.h"
 #include "MCAL/RCC/RCC.h"
@@ -8,7 +10,7 @@ void assert_failed(void)
 }
 #include <stdio.h>
 // Periodic task call:100ms Delay:20ms
-void display_test(void)
+void display_testa(void)
 {
     char buff[30] = {'0', '0'};
     static uint64_t timeMS = 0;
@@ -26,3 +28,5 @@ int test_main(void)
     Sched_start();
     
 }
+
+#endif
