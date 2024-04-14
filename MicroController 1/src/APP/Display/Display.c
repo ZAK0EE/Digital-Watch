@@ -64,6 +64,7 @@ void Display_task(void)
 {
     static uint8_t state = 0;
     static uint8_t frameIdx = 0;
+    static int8_t refreshTimerMS = DISPLAY_REFRESH_RATEMS;
     LCD_State_t LCD_state = 0; 
         switch(state)
         {
@@ -80,8 +81,11 @@ void Display_task(void)
                 if(LCD_state == LCD_STATE_READY) state++;         
                 break;       
             case 3:
-                LCD_writeStringAsync(LCD1, frameBuffer[frameIdx], DISPLAY_WIDTH);
-                state++;
+                if(refreshTimerMS <= 0)
+                {
+                    LCD_writeStringAsync(LCD1, frameBuffer[frameIdx], DISPLAY_WIDTH);
+                    state++;
+                }
                 break;
             case 4:
                 LCD_state = LCD_getState(LCD1);
@@ -90,10 +94,15 @@ void Display_task(void)
             case 5:
                 frameIdx++;
                 if(frameIdx >= DISPLAY_HEIGHT)
+                {
                     frameIdx = 0;
+                    refreshTimerMS = DISPLAY_REFRESH_RATEMS;
+                }
                 state = 0;
                 break;
         }
+
+        refreshTimerMS -= DISPLAY_PERIODIC_CALLMS;
         
 }
 
