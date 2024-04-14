@@ -39,7 +39,14 @@
  */
 void Display_task(void);
 
-void Display_isReady();
+/**
+ * @brief Prints the content of the buffer asynchronously.
+ * 
+ * @param buffer Pointer to the buffer containing the content to be printed.
+ * @param len Length of the content in the buffer.
+ */
+void Display_init(void);
+
 /**
  * @brief Prints the content of the buffer asynchronously.
  * 
