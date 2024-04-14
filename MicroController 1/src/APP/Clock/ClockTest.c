@@ -13,7 +13,7 @@
 
 void Clock_TEST_TASK (void)
 {
-    volatile const TineInfo_t* Time ;
+    volatile const TimeInfo_t* Time ;
     Time =  Clock_MillisTicksToTime();
     char buff[] =  {Time->Loc_100milliseconds , Time->second ,Time->minute , Time->hour,Time->day , Time->month , Time->year};
 

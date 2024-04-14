@@ -10,71 +10,62 @@
  *                                Includes	                                  *
  *******************************************************************************/
 #include "APP/Clock/Clock_Date.h"
-
+/*******************************************************************************
+ *                        	  Types Declaration                                 *
+ *******************************************************************************/
+static TimeInfo_t Time = {
+    .MillisecondsIn100 = 0,
+    .second = 0,
+    .minute = 0,
+    .hour = 0,
+    .day = 1,
+    .month = 1,
+    .year = 2000,
+};
 /*******************************************************************************
  *                             Implementation   				                *
  *******************************************************************************/
 /**
- * @brief    : Set Clock ON.
- * @param[in]: Copy_Clock The clock source to be set on. It can be CLOCK_HSI, CLOCK_HSE, or CLOCK_PLL.
- * @return   : Error_enumStatus_t Error status indicating the success or failure of setting the clock on.
- * @details  : This function turns on the specified clock source.
-               It enables the clock according to the provided clock source.
- */
- const TineInfo_t *Clock_MillisTicksToTime(void)
+ * @brief    : Calculates the current time based on the system tick count.
+ * @details  : This function calculates the current time using the system tick count.
+ *             - Retrieves the current tick count in milliseconds.
+ *             - Calculates the time difference between the current and previous timestamps.
+ *             - Updates the time structure with the added milliseconds, seconds, minutes, hours, and days.
+ *             - Adjusts the days if they exceed the number of days in the current month, considering leap years.
+ * @param[in]: None
+ * @return   : const TimeInfo_t* Pointer to the structure containing the current time information.
+ **/
+const TimeInfo_t *Clock_CalculateCurrentTime(void)
 {
+    /* Retrieve the current tick count in milliseconds */
     uint64_t Loc_milliseconds = Sched_getTickCount();
     Loc_milliseconds *= SCHED_TICK_TIMEMS;
+    /* Static variable to store the previous timestamp */
     static uint64_t Loc_PrevTimeStamp = 0;
+    /* Calculate the time difference between the current and previous timestamps */
     uint64_t Loc_TimeDiff = Loc_milliseconds - Loc_PrevTimeStamp;
 
-    static TineInfo_t Time = {
-        .Loc_100milliseconds = 0,
-        .second = 0,
-        .minute = 0,
-        .hour = 0,
-        .day = 1,
-        .month = 1,
-        .year = 2000,
-    };
-    /**Identify the number of milliseconds which will be added to the previous value
-     s
-     */
-    uint64_t Loc_milliseconds_since_epoch = Time.Loc_100milliseconds + (Loc_TimeDiff) / 100;
-    /**The time is given to us by milliseconds we just need to know the third digit in milliseconds
-     * ex: Loc_milliseconds = 45189300 so Time.Loc_100milliseconds should equal 3
-     */
-    Time.Loc_100milliseconds = (Time.Loc_100milliseconds + ((Loc_TimeDiff) / 100)) % 10;
+    /* Calculate the added milliseconds */
+    uint64_t Loc_AddedMilliseconds = Time.MillisecondsIn100 + (Loc_TimeDiff) / 100;
+    Time.MillisecondsIn100 = (Time.MillisecondsIn100 + ((Loc_TimeDiff) / 100)) % 10;
 
-    /**Identify the number of seconds which will be added to the previous value
-     * ex: Loc_milliseconds = 45189300 so Loc_seconds_since_epoch should equal 45189 seconds
-     */
-    uint64_t Loc_seconds_since_epoch = Time.second + (Loc_milliseconds_since_epoch / 10);
-    /** Get the current seconds as if Loc_seconds_since_epoch is 45189
-     *  So now is the second number should be 9  in a specific minute that i will calculate it in the next step  */
-    Time.second = (Time.second + (Loc_milliseconds_since_epoch / 10)) % 60;
-    /**Identify  the number of minutes which will be added to the previous value
-     * ex : Loc_seconds_since_epoch = 45189 so Loc_minutes_since_epoch should equal 753 minutes
-     */
-    uint64_t Loc_minutes_since_epoch = Time.minute + (Loc_seconds_since_epoch / 60);
-    /** Get the current minutes  as if Loc_minutes_since_epoch is 753
-     *  So now is the minute number should be 33 in a specific  hour that  i will calculate it in the next step
-     */
-    Time.minute = (Time.minute + Loc_seconds_since_epoch / 60) % 60;
-    /**Identify  the number of hours which will be added to the previous value
-     * ex : Loc_minutes_since_epoch = 753 so Loc_hours_since_epoch should equal 12 minutes
-     */
-    uint32_t Loc_hours_since_epoch = Time.hour + (Loc_minutes_since_epoch / 60);
-    /** Get the current minutes  as if Loc_hours_since_epoch is 12
-     *  So now is the hours number should be 12 in a specific day that i will calculate it in the next step
-     */
-    Time.hour = (Time.hour + (Loc_minutes_since_epoch / 60)) % 24;
-    /**Identify  the number of Days  which will be added to the previous value
-     * ex : Loc_hours_since_epoch = 12 so Loc_days_since_epoch should equal 0 days
-     */
-    uint32_t Loc_days_since_epoch = Loc_hours_since_epoch / 24;
-    Time.day += Loc_days_since_epoch;
-    /*Define array to hold the number of days in each month*/
+    /* Calculate the added seconds */
+    uint64_t Loc_AddedSeconds = Time.second + (Loc_AddedMilliseconds / 10);
+    Time.second = (Time.second + (Loc_AddedMilliseconds / 10)) % 60;
+
+    /* Calculate the added minutes */
+    uint64_t Loc_AddedMinutes = Time.minute + (Loc_AddedSeconds / 60);
+    Time.minute = (Time.minute + Loc_AddedSeconds / 60) % 60;
+
+    /* Calculate the added hours */
+    uint32_t Loc_AddedHours = Time.hour + (Loc_AddedMinutes / 60);
+    Time.hour = (Time.hour + (Loc_AddedMinutes / 60)) % 24;
+
+    /* Calculate the added days */
+    uint32_t Loc_AddDays = Loc_AddedHours / 24;
+    Time.day += Loc_AddDays;
+
+    /* Define array to hold the number of days in each month */
     static const uint8_t days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     while (Time.day > days_in_month[Time.month - 1])
     {
@@ -83,12 +74,14 @@
         {
             if (Time.day > 29)
             {
-                Time.day -= 29; // Adjust for 29 days in February
+                /* Adjust for 29 days in February */
+                Time.day -= 29;
                 Time.month++;
             }
             else
             {
-                break; // No need to adjust if it's still within February in a leap year
+                /* No need to adjust if it's still within February in a leap year */
+                break;
             }
         }
         else
@@ -102,7 +95,68 @@
             Time.year++;
         }
     }
+    /* Update the previous timestamp */
     Loc_PrevTimeStamp = Loc_milliseconds;
-    /* Return the status of the clock operation */
+    /* Return the pointer to the structure containing the current time information */
     return &Time;
+}
+
+/**
+ * @brief    : Sets the seconds value in the time structure.
+ * @param[in]: seconds: The value to set for seconds.
+ * @return   : None
+ **/
+void Clock_SetSeconds(uint8_t seconds)
+{
+    Time.second = seconds;
+}
+
+/**
+ * @brief    : Sets the minutes value in the time structure.
+ * @param[in]: minutes: The value to set for minutes.
+ * @return   : None
+ **/
+void Clock_SetMinutes(uint8_t minutes)
+{
+    Time.minute = minutes;
+}
+
+/**
+ * @brief    : Sets the hours value in the time structure.
+ * @param[in]: hours: The value to set for hours.
+ * @return   : None
+ **/
+void Clock_SetHours(uint8_t hours)
+{
+    Time.hour = hours;
+}
+
+/**
+ * @brief    : Sets the days value in the time structure.
+ * @param[in]: days: The value to set for days.
+ * @return   : None
+ **/
+void Clock_SetDays(uint8_t days)
+{
+    Time.day = days;
+}
+
+/**
+ * @brief    : Sets the months value in the time structure.
+ * @param[in]: months: The value to set for months.
+ * @return   : None
+ **/
+void Clock_SetMonths(uint8_t months)
+{
+    Time.month = months;
+}
+
+/**
+ * @brief    : Sets the years value in the time structure.
+ * @param[in]: years: The value to set for years.
+ * @return   : None
+ **/
+void Clock_SetYears(uint16_t years)
+{
+    Time.year = years;
 }
