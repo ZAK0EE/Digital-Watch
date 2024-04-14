@@ -3,6 +3,9 @@
         "nvic.h": "c",
         "gpio.h": "c",
         "usart_cfg.h": "c",
-        "usart.h": "c"
+        "usart.h": "c",
+        "scheduler.h": "c",
+        "scheduler_cfg.h": "c",
+        "clock_date.h": "c"
     }
 }

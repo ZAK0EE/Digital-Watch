@@ -30,6 +30,7 @@
 /********************************************************************************************************/
 extern void Display_task(void);
 extern void LCD_task(void);
+extern void Clock_TEST_TASK (void) ;
 
 Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] = 
 {
@@ -55,5 +56,11 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
         .CallBack = Display_task,
         .DelayMS = 20,
         .PeriodicityMS = 1,
+   },
+   [Clock_TEST_Task]=
+   {
+     .CallBack = Clock_TEST_TASK,
+      .DelayMS = 40,
+      .PeriodicityMS = 100,
    }     
 };
