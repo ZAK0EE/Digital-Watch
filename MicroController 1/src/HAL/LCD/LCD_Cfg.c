@@ -52,8 +52,8 @@ LCD_Config_t LCD_Config[_NUM_OF_LCDS]=
 	{
 		.DataLength = LCD_DL_8BIT,
 		.Font= LCD_FONT_5X10,
-		.CursorState = LCD_CURSOR_STATE_ON,
-		.CursorBlinkingState = LCD_CURSOR_BLINKING_ON,
+		.CursorState = LCD_CURSOR_STATE_OFF,
+		.CursorBlinkingState = LCD_CURSOR_BLINKING_OFF,
  		.RSPin=
 		{
 			.PortID= GPIO_GPIOA,

@@ -15,7 +15,7 @@ int main(void)
     char msg[] = "Hello, world";
     Display_printAsync(msg, 12);
     Display_setCursorAsync(1, 0);
-    Display_printAsync("ABC", 3);
+    Display_printCenteredAsync("ABCD", 4);
     Sched_init();
     Sched_start();
     
