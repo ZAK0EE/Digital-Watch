@@ -16,6 +16,8 @@
 #include "Display.h"
 #include "Display_cfg.h"
 #include "LIB/std_types.h"
+
+#include "HAL/LCD/LCD.h"
 #include <string.h>
 
 /********************************************************************************************************/
@@ -60,8 +62,42 @@ CursorPos currentCurPos = {.row = 0, .col = 0};
 
 void Display_task(void)
 {
-
+    static uint8_t state = 0;
+    static uint8_t frameIdx = 0;
+    LCD_State_t LCD_state = 0; 
+        switch(state)
+        {
+            case 0:
+                LCD_state = LCD_getState(LCD1);
+                if(LCD_state == LCD_STATE_READY) state++;
+                break;
+            case 1:
+                LCD_setCursorPositionAsync(LCD1, 0, frameIdx);
+                state++;
+                break;
+            case 2:
+                LCD_state = LCD_getState(LCD1);
+                if(LCD_state == LCD_STATE_READY) state++;         
+                break;       
+            case 3:
+                LCD_writeStringAsync(LCD1, frameBuffer[frameIdx], DISPLAY_WIDTH - 1);
+                state++;
+                break;
+            case 4:
+                LCD_state = LCD_getState(LCD1);
+                if(LCD_state == LCD_STATE_READY) state++;         
+                break;                
+            case 5:
+                frameIdx++;
+                if(frameIdx > DISPLAY_HEIGHT)
+                    frameIdx = 0;
+                state = 0;
+                break;
+        }
+        
 }
+
+
 
 void Display_init(void)
 {
@@ -74,6 +110,7 @@ void Display_init(void)
         }
     }
 }
+
 
 void Display_printAsync(char *buffer, uint8_t len)
 {   
@@ -88,12 +125,7 @@ void Display_printAsync(char *buffer, uint8_t len)
     currentCurPos.col += cpyLen;
 }
 
-/**
- * @brief Prints the content of the buffer centered on the display asynchronously.
- * 
- * @param buffer Pointer to the buffer containing the content to be printed.
- * @param len Length of the content in the buffer.
- */
+
 void Display_printCenteredAsync(char *buffer, uint8_t len)
 {
     uint8_t row = currentCurPos.row;
@@ -109,21 +141,14 @@ void Display_printCenteredAsync(char *buffer, uint8_t len)
     strncpy(&frameBuffer[row][centerPos], buffer, cpyLen);
 }
 
-/**
- * @brief Sets the cursor position on the display.
- * 
- * @param column The column position (0-based index) where the cursor should be set.
- * @param row The row position (0-based index) where the cursor should be set.
- */
+
 void Display_setCursorAsync(uint8_t column, uint8_t row)
 {
     currentCurPos.row = MIN(DISPLAY_HEIGHT - 1, row);
     currentCurPos.col = MIN(DISPLAY_WIDTH - 1, column);
 }
 
-/**
- * @brief Clears the content displayed on the screen.
- */
+
 void Display_clearScreenAsync(void)
 {
     /* Filling the frame with spaces [empty frame] */
