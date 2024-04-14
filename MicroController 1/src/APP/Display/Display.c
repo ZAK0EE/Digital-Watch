@@ -80,7 +80,7 @@ void Display_task(void)
                 if(LCD_state == LCD_STATE_READY) state++;         
                 break;       
             case 3:
-                LCD_writeStringAsync(LCD1, frameBuffer[frameIdx], DISPLAY_WIDTH - 1);
+                LCD_writeStringAsync(LCD1, frameBuffer[frameIdx], DISPLAY_WIDTH);
                 state++;
                 break;
             case 4:
@@ -161,4 +161,7 @@ void Display_clearScreenAsync(void)
             frameBuffer[i][j] = ' ';
         }
     }
+    
+    currentCurPos.row = 0;
+    currentCurPos.col = 0;
 }
