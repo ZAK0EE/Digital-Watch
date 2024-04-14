@@ -138,7 +138,6 @@ void Display_printAsync(char *buffer, uint8_t len)
 void Display_printCenteredAsync(char *buffer, uint8_t len)
 {
     uint8_t row = currentCurPos.row;
-    uint8_t col = currentCurPos.col;
 
     /* Calculating the center position */
     uint8_t centerPos = (DISPLAY_WIDTH - len) / 2;
