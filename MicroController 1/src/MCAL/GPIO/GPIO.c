@@ -108,7 +108,7 @@ typedef struct {
 /************************************************Variables***********************************************/
 /********************************************************************************************************/
 
-GPIO_TypeDef volatile *const GPIOS[NUM_OF_GPIOS] = {
+static GPIO_TypeDef volatile *const GPIOS[NUM_OF_GPIOS] = {
     [GPIO_GPIOA]=(GPIO_TypeDef volatile *const)GPIOA_BASE,
     [GPIO_GPIOB]=(GPIO_TypeDef volatile *const)GPIOB_BASE,
     [GPIO_GPIOC]=(GPIO_TypeDef volatile *const)GPIOC_BASE,
