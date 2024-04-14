@@ -23,7 +23,7 @@
 /**
  * @brief Time interval for the scheduler tick in milliseconds.
  */
-#define SCHED_TICK_TIMEMS 2
+#define SCHED_TICK_TIMEMS 1
 
 
 /********************************************************************************************************/
@@ -39,7 +39,8 @@
  */
 typedef enum
 {
-            
+    SCHED_LCD_TASK,
+    SCHED_DISPLAY_TASK,
     _NUM_OF_RUNNABLES,    /**< Total number of runnables. Do not modify. */
 } Sched_Runnable_Name_t;
 

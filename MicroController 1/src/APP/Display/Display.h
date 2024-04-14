@@ -69,7 +69,7 @@ void Display_printCenteredAsync(char *buffer, uint8_t len);
  * @param column The column position (0-based index) where the cursor should be set.
  * @param row The row position (0-based index) where the cursor should be set.
  */
-void Display_setCursorAsync(uint8_t column, uint8_t row);
+void Display_setCursorAsync(uint8_t row, uint8_t column);
 
 /**
  * @brief Clears the content displayed on the screen.

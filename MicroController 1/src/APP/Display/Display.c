@@ -45,7 +45,7 @@ typedef struct
 /********************************************************************************************************/
 /************************************************Variables***********************************************/
 /********************************************************************************************************/
-char frameBuffer[DISPLAY_WIDTH][DISPLAY_HEIGHT] = {0};
+char frameBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
 CursorPos currentCurPos = {.row = 0, .col = 0};
 
 /********************************************************************************************************/
@@ -72,7 +72,7 @@ void Display_task(void)
                 if(LCD_state == LCD_STATE_READY) state++;
                 break;
             case 1:
-                LCD_setCursorPositionAsync(LCD1, 0, frameIdx);
+                LCD_setCursorPositionAsync(LCD1, frameIdx, 0);
                 state++;
                 break;
             case 2:
@@ -133,16 +133,18 @@ void Display_printCenteredAsync(char *buffer, uint8_t len)
 
     /* Calculating the center position */
     uint8_t centerPos = (DISPLAY_WIDTH - len) / 2;
-
+    currentCurPos.col = centerPos;
     /* Truncation to prevent over rendering */
     uint8_t cpyLen = MIN(len, DISPLAY_WIDTH - centerPos);
 
     /* Copying the content to the frame buffer */
-    strncpy(&frameBuffer[row][centerPos], buffer, cpyLen);
+    strncpy(&frameBuffer[row][currentCurPos.col], buffer, cpyLen);
+    currentCurPos.col += cpyLen;
+
 }
 
 
-void Display_setCursorAsync(uint8_t column, uint8_t row)
+void Display_setCursorAsync(uint8_t row, uint8_t column)
 {
     currentCurPos.row = MIN(DISPLAY_HEIGHT - 1, row);
     currentCurPos.col = MIN(DISPLAY_WIDTH - 1, column);

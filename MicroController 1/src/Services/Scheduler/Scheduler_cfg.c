@@ -28,6 +28,8 @@
 /********************************************************************************************************/
 /************************************************Variables***********************************************/
 /********************************************************************************************************/
+extern void Display_task(void);
+extern void LCD_task(void);
 
 Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] = 
 {
@@ -40,5 +42,18 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
         .DelayMS = 0,
         .PeriodicityMS = 1000,
     },    
-    */        
+    */
+   [SCHED_LCD_TASK]=
+   {
+        .CallBack = LCD_task,
+        .DelayMS = 0,
+        .PeriodicityMS = 1,
+   },
+
+   [SCHED_DISPLAY_TASK]=
+   {
+        .CallBack = Display_task,
+        .DelayMS = 20,
+        .PeriodicityMS = 100,
+   }     
 };
