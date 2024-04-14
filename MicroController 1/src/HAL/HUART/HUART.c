@@ -148,9 +148,8 @@ Error_enumStatus_t HUART_Init(void)
         GPIO_initPin(&UART_PINS[RX_ID]);
         
         /* Configure GPIO alternate function for UART TX and RX */
-        GPIO_CFG_AlternativeFunction(UART_PINS[TX_ID].Port, UART_PINS[TX_ID].PinNumber, HUARTS[Loc_idx].TX_AF_ID);
-        GPIO_CFG_AlternativeFunction(UART_PINS[RX_ID].Port, UART_PINS[RX_ID].PinNumber, HUARTS[Loc_idx].TX_AF_ID);
-        
+         GPIO_setPinAF(UART_PINS[TX_ID].Port, UART_PINS[TX_ID].PinNumber, HUARTS[Loc_idx].TX_AF_ID);
+         GPIO_setPinAF(UART_PINS[RX_ID].Port, UART_PINS[RX_ID].PinNumber, HUARTS[Loc_idx].TX_AF_ID);        
         /* Enable NVIC interrupts for UART communication */
         switch (HUARTS[Loc_idx].USART_ID)
         {

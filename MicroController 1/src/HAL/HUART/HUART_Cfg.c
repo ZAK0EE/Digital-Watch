@@ -42,22 +42,23 @@
 #define HUART_PIN15 	GPIO_PIN15
 	
 /********************Macros for the HUART AF Num********************/
-#define HUART_AF_0						0x00000000
-#define HUART_AF_1						0x00000001
-#define HUART_AF_2						0x00000002
-#define HUART_AF_3						0x00000003
-#define HUART_AF_4						0x00000004
-#define HUART_AF_5						0x00000005
-#define HUART_AF_6						0x00000006
-#define HUART_AF_7						0x00000007
-#define HUART_AF_8						0x00000008
-#define HUART_AF_9						0x00000009
-#define HUART_AF_10						0x0000000A
-#define HUART_AF_11						0x0000000B
-#define HUART_AF_12						0x0000000C
-#define HUART_AF_13						0x0000000D
-#define HUART_AF_14						0x0000000E
-#define HUART_AF_15						0x0000000F
+#define HUART_AF_0     GPIO_AF_NUM_0
+#define HUART_AF_1     GPIO_AF_NUM_1
+#define HUART_AF_2     GPIO_AF_NUM_2
+#define HUART_AF_3     GPIO_AF_NUM_3
+#define HUART_AF_4     GPIO_AF_NUM_4
+#define HUART_AF_5     GPIO_AF_NUM_5
+#define HUART_AF_6     GPIO_AF_NUM_6
+#define HUART_AF_7     GPIO_AF_NUM_7
+#define HUART_AF_8     GPIO_AF_NUM_8
+#define HUART_AF_9     GPIO_AF_NUM_9
+#define HUART_AF_10    GPIO_AF_NUM_10
+#define HUART_AF_11    GPIO_AF_NUM_11
+#define HUART_AF_12    GPIO_AF_NUM_12
+#define HUART_AF_13    GPIO_AF_NUM_13
+#define HUART_AF_14    GPIO_AF_NUM_14
+#define HUART_AF_15    GPIO_AF_NUM_15
+
 /*******************************************************************************
  *                             Implementation   				                *
  *******************************************************************************/
