@@ -45,8 +45,8 @@ typedef struct
 /********************************************************************************************************/
 /************************************************Variables***********************************************/
 /********************************************************************************************************/
-char frameBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
-CursorPos currentCurPos = {.row = 0, .col = 0};
+static char frameBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
+static CursorPos currentCurPos = {.row = 0, .col = 0};
 
 /********************************************************************************************************/
 /*****************************************Static Functions Prototype*************************************/
@@ -89,7 +89,7 @@ void Display_task(void)
                 break;                
             case 5:
                 frameIdx++;
-                if(frameIdx > DISPLAY_HEIGHT)
+                if(frameIdx >= DISPLAY_HEIGHT)
                     frameIdx = 0;
                 state = 0;
                 break;
