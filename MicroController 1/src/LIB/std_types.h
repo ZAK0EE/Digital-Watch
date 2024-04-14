@@ -40,4 +40,7 @@ typedef signed long long      sint64_t;         /* -9223372036854775808 .. 92233
 typedef float                 float32_t;
 typedef double                float64_t;
 
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 #endif /* STD_TYPE_H_ */
