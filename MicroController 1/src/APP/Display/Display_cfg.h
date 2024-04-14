@@ -16,8 +16,21 @@
 /********************************************************************************************************/
 /************************************************Defines*************************************************/
 /********************************************************************************************************/
+
+/**
+ * @brief Width of the display in characters.
+ */
 #define DISPLAY_WIDTH 16
+
+/**
+ * @brief Height of the display in lines.
+ */
 #define DISPLAY_HEIGHT 2
+
+/**
+ * @brief Time interval in milliseconds between periodic calls to the display task.
+ */
+#define DISPLAY_PERIODIC_CALLMS 1
 
 
 
