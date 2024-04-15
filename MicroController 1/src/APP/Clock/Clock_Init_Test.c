@@ -9,7 +9,7 @@
 /*******************************************************************************
  *                                Includes	                                  *
  *******************************************************************************/
-#define Clock_DISPLAY_TEST
+//#define Clock_DISPLAY_TEST
 #ifdef Clock_TEST
 #include "APP/Clock/Clock_Date.h"
 
@@ -46,7 +46,7 @@ void display_testa(void)
     Display_printCenteredAsync(buff, len);
 
 }
-int main(void)
+int Clock_test_main(void)
 {
     InitSys();
     Clock_SetYears(2024);
