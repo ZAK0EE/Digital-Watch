@@ -14,7 +14,7 @@
  *                        	  Types Declaration                                 *
  *******************************************************************************/
 static TimeInfo_t Time = {
-    .MillisecondsIn100 = 0,
+    .secondMS = 0,
     .second = 0,
     .minute = 0,
     .hour = 0,
@@ -46,20 +46,19 @@ const TimeInfo_t *Clock_CalculateCurrentTime(void)
     uint64_t Loc_TimeDiff = Loc_milliseconds - Loc_PrevTimeStamp;
 
     /* Calculate the added milliseconds */
-    uint64_t Loc_AddedMilliseconds = Time.MillisecondsIn100 + (Loc_TimeDiff) / 100;
-    Time.MillisecondsIn100 = (Time.MillisecondsIn100 + ((Loc_TimeDiff) / 100)) % 10;
-
+    uint64_t Loc_AddedMilliseconds = Time.secondMS + (Loc_TimeDiff) / 100;
+    Time.secondMS = Loc_AddedMilliseconds % 10;
     /* Calculate the added seconds */
     uint64_t Loc_AddedSeconds = Time.second + (Loc_AddedMilliseconds / 10);
-    Time.second = (Time.second + (Loc_AddedMilliseconds / 10)) % 60;
+    Time.second = Loc_AddedSeconds % 60;
 
     /* Calculate the added minutes */
     uint64_t Loc_AddedMinutes = Time.minute + (Loc_AddedSeconds / 60);
-    Time.minute = (Time.minute + Loc_AddedSeconds / 60) % 60;
+    Time.minute = Loc_AddedMinutes % 60;
 
     /* Calculate the added hours */
     uint32_t Loc_AddedHours = Time.hour + (Loc_AddedMinutes / 60);
-    Time.hour = (Time.hour + (Loc_AddedMinutes / 60)) % 24;
+    Time.hour = Loc_AddedHours % 24;
 
     /* Calculate the added days */
     uint32_t Loc_AddDays = Loc_AddedHours / 24;

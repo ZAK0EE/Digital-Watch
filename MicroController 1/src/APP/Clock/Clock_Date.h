@@ -25,7 +25,7 @@
  *******************************************************************************/
 typedef struct 
 {
-	uint8_t MillisecondsIn100 ;
+	uint8_t secondMS ;
 	uint8_t second ;
 	uint8_t minute ;
 	uint8_t hour ;

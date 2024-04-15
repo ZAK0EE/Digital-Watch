@@ -16,34 +16,35 @@
  *                                Definitions                                  *
  *******************************************************************************/
 /********************Macros for the HSwitch Ports********************/
-#define HSwitch_PORTA  	0
-#define HSwitch_PORTB	1
-#define HSwitch_PORTC  	2
-#define HSwitch_PORTD 	3
-#define HSwitch_PORTE 	4
-#define HSwitch_PORTH	5
+#define HSwitch_PORTA  	GPIO_GPIOA
+#define HSwitch_PORTB	GPIO_GPIOB
+#define HSwitch_PORTC  	GPIO_GPIOC
+#define HSwitch_PORTD 	GPIO_GPIOD
+#define HSwitch_PORTE 	GPIO_GPIOE
+#define HSwitch_PORTH	GPIO_GPIOH
 
 /********************Macros for the HSwitch Pins********************/
-#define HSwitch_PIN0 	0x00000000
-#define HSwitch_PIN1 	0x00000001
-#define HSwitch_PIN2 	0x00000002
-#define HSwitch_PIN3 	0x00000003
-#define HSwitch_PIN4 	0x00000004
-#define HSwitch_PIN5 	0x00000005
-#define HSwitch_PIN6 	0x00000006
-#define HSwitch_PIN7 	0x00000007
-#define HSwitch_PIN8 	0x00000008
-#define HSwitch_PIN9	0x00000009
-#define HSwitch_PIN10 	0x0000000A
-#define HSwitch_PIN11 	0x0000000B
-#define HSwitch_PIN12 	0x0000000C
-#define HSwitch_PIN13 	0x0000000D
-#define HSwitch_PIN14 	0x0000000E
-#define HSwitch_PIN15 	0x0000000F
+#define HSwitch_PIN0 	GPIO_PIN0
+#define HSwitch_PIN1 	GPIO_PIN1
+#define HSwitch_PIN2 	GPIO_PIN2
+#define HSwitch_PIN3 	GPIO_PIN3
+#define HSwitch_PIN4 	GPIO_PIN4
+#define HSwitch_PIN5 	GPIO_PIN5
+#define HSwitch_PIN6 	GPIO_PIN6
+#define HSwitch_PIN7 	GPIO_PIN7
+#define HSwitch_PIN8 	GPIO_PIN8
+#define HSwitch_PIN9	GPIO_PIN9
+#define HSwitch_PIN10 	GPIO_PIN10
+#define HSwitch_PIN11 	GPIO_PIN11
+#define HSwitch_PIN12 	GPIO_PIN12
+#define HSwitch_PIN13 	GPIO_PIN13
+#define HSwitch_PIN14 	GPIO_PIN14
+#define HSwitch_PIN15 	GPIO_PIN15
+
 /********************Macros for the HSwitch type of connection********************/
-#define HSwitch_INPUT_FL					0x00000000
-#define HSwitch_INPUT_PL					0x00000008
-#define HSwitch_INPUT_PD					0x00000010
+#define HSwitch_INPUT_FL					GPIO_MODE_INPUT_NOPULL
+#define HSwitch_INPUT_PL					GPIO_MODE_INPUT_PULLUP
+#define HSwitch_INPUT_PD					GPIO_MODE_INPUT_PULLDOWN
 /*******************************************************************************
  *                             Implementation   				                *
  *******************************************************************************/
@@ -52,15 +53,21 @@
  It implicitly make it static fri this file so the other files can't see it */
  const  HSwitch_Config_t HSwitchS[_HSwitch_Num] = {
    /*Ex : Set HSwitch1 Configuration*/
-    [HSwitch1] = {
-        .Pin = HSwitch_PIN4,
+    [Increament] = {
+        .Pin = HSwitch_PIN0,
         .Port = HSwitch_PORTB,
         .Connection = HSwitch_INPUT_PL
     },
-   [HSwitch2] = {
-        .Pin = HSwitch_PIN5,
+   [Mode] = {
+        .Pin = HSwitch_PIN1,
+        .Port = HSwitch_PORTB,
+        .Connection = HSwitch_INPUT_PL
+    },
+   [Edit] = {
+        .Pin = HSwitch_PIN6,
         .Port = HSwitch_PORTB,
         .Connection = HSwitch_INPUT_PL
     }
+
 
 };

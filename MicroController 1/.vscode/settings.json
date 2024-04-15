@@ -6,6 +6,11 @@
         "usart.h": "c",
         "scheduler.h": "c",
         "scheduler_cfg.h": "c",
-        "clock_date.h": "c"
-    }
+        "clock_date.h": "c",
+        "hswitch.h": "c",
+        "hswitch_cfg.h": "c",
+        "rcc.h": "c",
+        "clk_control.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
