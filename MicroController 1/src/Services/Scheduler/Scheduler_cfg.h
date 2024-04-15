@@ -39,9 +39,8 @@
  */
 typedef enum
 {
-    SCHED_LCD_TASK,
     SCHED_DISPLAY_TASK,
-    Clock_TEST_Task,
+    SCHED_LCD_TASK,
     _NUM_OF_RUNNABLES,    /**< Total number of runnables. Do not modify. */
 } Sched_Runnable_Name_t;
 

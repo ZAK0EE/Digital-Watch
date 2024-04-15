@@ -32,6 +32,8 @@ extern void Display_task(void);
 extern void LCD_task(void);
 extern void Clock_TEST_TASK (void) ;
 extern void display_testa(void) ;
+
+extern void Stopwatch_test(void);
 Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] = 
 {
 
@@ -57,10 +59,5 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
         .DelayMS = 20,
         .PeriodicityMS = 1,
    },
-   [Clock_TEST_Task]=
-   {
-     .CallBack = display_testa,
-      .DelayMS = 40,
-      .PeriodicityMS = 100,
-   }     
+
 };
