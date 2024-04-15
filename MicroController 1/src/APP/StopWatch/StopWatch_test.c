@@ -1,3 +1,4 @@
+#ifdef STOPWATCH_TEST
 
 #include "APP/Display/Display.h"
 #include "HAL/LCD/LCD.h"
@@ -59,3 +60,5 @@ void stopwatch_test_main(void)
     Sched_start();
     
 }
+
+#endif
