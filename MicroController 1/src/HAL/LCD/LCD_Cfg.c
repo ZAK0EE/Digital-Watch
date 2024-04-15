@@ -96,7 +96,7 @@ LCD_Config_t LCD_Config[_NUM_OF_LCDS]=
 			},
 			{
 				.PortID= GPIO_GPIOA,
-				.PinNum= GPIO_PIN9,
+				.PinNum= GPIO_PIN11,
 			},
 																			
 		}

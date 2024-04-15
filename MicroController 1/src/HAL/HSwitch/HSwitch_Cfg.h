@@ -15,8 +15,9 @@
 typedef enum 
 {
 	/* EX : HSwitch */
-	HSwitch1,
-	HSwitch2,
+	Increament,
+	Mode,
+	Edit,
 	/*Indicate number of HSwitchd don't use it */
     _HSwitch_Num 
 }HSwitchS_t;
