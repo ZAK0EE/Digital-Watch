@@ -1,0 +1,12 @@
+#ifndef SYSTICK_cfg_H_
+#define SYSTICK_cfg_H_
+
+#define SYSTICK_CLOCK_SOURCE_AHB         (u32)0x07
+#define SYSTICK_CLOCK_SOURCE_AHB_DIV8    (u32)0x03
+#define SYSTICK_CLOCK_SOURCE        SYSTICK_CLOCK_SOURCE_AHB
+
+#define SYSTICK_CLOCK_VALUE         16000000UL
+
+#define SYSTICK_MAX_SUPPORTED_CBF   (u8)3
+
+#endif // SYSTICK_cfg_H_
