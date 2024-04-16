@@ -32,8 +32,10 @@ extern void Display_task(void);
 extern void LCD_task(void);
 extern void Clock_TEST_TASK (void) ;
 extern void display_testa(void) ;
-
 extern void Stopwatch_test(void);
+extern void DW_Runnable(void) ;
+extern void HSwitch_Runnable(void);
+void Update_Switch_Runnable(void);
 Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] = 
 {
 
@@ -59,5 +61,23 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
         .DelayMS = 20,
         .PeriodicityMS = 1,
    },
+   [SCHED_SWITCH_TASK]=
+   {
+        .CallBack = HSwitch_Runnable,
+        .DelayMS = 40,
+        .PeriodicityMS = 1,
+   },
+   [SCHED_DigitalWatch_Task]=
+   {
+        .CallBack = DW_Runnable,
+        .DelayMS = 100,
+        .PeriodicityMS = 100,
+   },
+   [SCHED_UPDATE_SWICH]=
+   {
+        .CallBack = Update_Switch_Runnable,
+        .DelayMS = 40,
+        .PeriodicityMS = 150,
+   }
 
 };

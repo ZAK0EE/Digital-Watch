@@ -41,6 +41,10 @@ typedef enum
 {
     SCHED_DISPLAY_TASK,
     SCHED_LCD_TASK,
+    SCHED_SWITCH_TASK,
+    SCHED_UPDATE_SWICH,
+    SCHED_DigitalWatch_Task,
+
     _NUM_OF_RUNNABLES,    /**< Total number of runnables. Do not modify. */
 } Sched_Runnable_Name_t;
 

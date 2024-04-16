@@ -24,7 +24,7 @@ void InitSys (void)
 {
     /* Enable clock for GPIOA */
     Set_Clock_ON(GPIOA);
-    
+    Set_Clock_ON(GPIOB);
     /* Initialize hardware UART */
     HUART_Init();
     

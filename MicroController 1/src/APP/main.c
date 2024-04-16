@@ -1,12 +1,12 @@
 #include "Services/Scheduler/Scheduler.h"
-
+#include "APP/INIT/INIT.h"
 void assert_failed(void)
 {
      while(1);
 }
 int main(void)
 {
-
-     Sched_init();
-     Sched_start();
+    InitSys();
+    Sched_init();
+    Sched_start();
 }

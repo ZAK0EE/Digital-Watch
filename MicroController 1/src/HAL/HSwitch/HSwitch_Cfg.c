@@ -42,9 +42,9 @@
 #define HSwitch_PIN15 	GPIO_PIN15
 
 /********************Macros for the HSwitch type of connection********************/
-#define HSwitch_INPUT_FL					GPIO_MODE_INPUT_NOPULL
-#define HSwitch_INPUT_PL					GPIO_MODE_INPUT_PULLUP
-#define HSwitch_INPUT_PD					GPIO_MODE_INPUT_PULLDOWN
+#define HSwitch_INPUT_FL					 GPIO_MODE_INPUT_NOPULL
+#define HSwitch_INPUT_PL					 GPIO_MODE_INPUT_PULLUP
+#define HSwitch_INPUT_PD					 GPIO_MODE_INPUT_PULLDOWN
 /*******************************************************************************
  *                             Implementation   				                *
  *******************************************************************************/

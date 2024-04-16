@@ -23,6 +23,11 @@ static TimeInfo_t Time = {
     .year = 2000,
 };
 /*******************************************************************************
+ *                        	     Variables                                      *
+ *******************************************************************************/
+/* Define array to hold the number of days in each month */
+static const uint8_t days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+/*******************************************************************************
  *                             Implementation   				                *
  *******************************************************************************/
 /**
@@ -47,25 +52,23 @@ const TimeInfo_t *Clock_CalculateCurrentTime(void)
 
     /* Calculate the added milliseconds */
     uint64_t Loc_AddedMilliseconds = Time.secondMS + (Loc_TimeDiff) / 100;
-    Time.secondMS = Loc_AddedMilliseconds % 10;
+    Time.secondMS = ( Time.secondMS + (Loc_TimeDiff) / 100) % 10;
     /* Calculate the added seconds */
     uint64_t Loc_AddedSeconds = Time.second + (Loc_AddedMilliseconds / 10);
-    Time.second = Loc_AddedSeconds % 60;
+    Time.second = (Time.second + (Loc_AddedMilliseconds / 10)) % 60;
 
     /* Calculate the added minutes */
     uint64_t Loc_AddedMinutes = Time.minute + (Loc_AddedSeconds / 60);
-    Time.minute = Loc_AddedMinutes % 60;
+    Time.minute = (Time.minute + (Loc_AddedSeconds / 60)) % 60;
 
     /* Calculate the added hours */
     uint32_t Loc_AddedHours = Time.hour + (Loc_AddedMinutes / 60);
-    Time.hour = Loc_AddedHours % 24;
+    Time.hour = (Time.hour + (Loc_AddedMinutes / 60)) % 24;
 
     /* Calculate the added days */
     uint32_t Loc_AddDays = Loc_AddedHours / 24;
     Time.day += Loc_AddDays;
 
-    /* Define array to hold the number of days in each month */
-    static const uint8_t days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     while (Time.day > days_in_month[Time.month - 1])
     {
         /* Check if the current month is February */
@@ -107,7 +110,14 @@ const TimeInfo_t *Clock_CalculateCurrentTime(void)
  **/
 void Clock_SetSeconds(uint8_t seconds)
 {
-    Time.second = seconds;
+    if (seconds > 59)
+    {
+        Time.second = 0;
+    }
+    else
+    {
+        Time.second = seconds;
+    }
 }
 
 /**
@@ -117,7 +127,14 @@ void Clock_SetSeconds(uint8_t seconds)
  **/
 void Clock_SetMinutes(uint8_t minutes)
 {
-    Time.minute = minutes;
+    if (minutes > 59)
+    {
+        Time.minute = 0;
+    }
+    else
+    {
+        Time.minute = minutes;
+    }
 }
 
 /**
@@ -127,7 +144,14 @@ void Clock_SetMinutes(uint8_t minutes)
  **/
 void Clock_SetHours(uint8_t hours)
 {
-    Time.hour = hours;
+    if (hours > 23)
+    {
+        Time.hour = 0;
+    }
+    else
+    {
+        Time.hour = hours;
+    }
 }
 
 /**
@@ -137,7 +161,19 @@ void Clock_SetHours(uint8_t hours)
  **/
 void Clock_SetDays(uint8_t days)
 {
-    Time.day = days;
+    uint8_t Current_Day = days_in_month[Time.month - 1];
+    if (Time.month == 2 && ((Time.year % 4 == 0 && Time.year % 100 != 0) || Time.year % 400 == 0))
+    {
+        Current_Day = 29;
+    }
+    if ( (days > Current_Day) ||  (days == 0) )
+    {
+        Time.day = 1;
+    }
+    else
+    {
+        Time.day = days;
+    }
 }
 
 /**
@@ -147,7 +183,14 @@ void Clock_SetDays(uint8_t days)
  **/
 void Clock_SetMonths(uint8_t months)
 {
-    Time.month = months;
+    if (months > 12 || (months == 0))
+    {
+        Time.month = 1;
+    }
+    else
+    {
+        Time.month = months;
+    }
 }
 
 /**
@@ -157,5 +200,12 @@ void Clock_SetMonths(uint8_t months)
  **/
 void Clock_SetYears(uint16_t years)
 {
-    Time.year = years;
+    if ((years > 9999 ) || (years < 2000 ) || (years == 0))
+    {
+        Time.year = 2000;
+    }
+    else
+    {
+        Time.year = years;
+    }
 }
