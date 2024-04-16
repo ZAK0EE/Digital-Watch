@@ -84,7 +84,7 @@ static void DW_StopWatch_Modes(void);
 void Update_Switch_Runnable(void)
 {
     /* Get status of the increment switch */
-    HSwitch_Get_Status(Increament, &Inc_switch_status);
+    HSwitch_Get_Status(Increment, &Inc_switch_status);
     
     /* Get status of the mode switch */
     HSwitch_Get_Status(Mode, &Mode_switch_status);

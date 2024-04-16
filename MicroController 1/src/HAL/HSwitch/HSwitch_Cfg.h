@@ -15,7 +15,7 @@
 typedef enum 
 {
 	/* EX : HSwitch */
-	Increament,
+	Increment,
 	Mode,
 	Edit,
 	/*Indicate number of HSwitchd don't use it */
