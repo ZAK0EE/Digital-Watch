@@ -1,9 +1,9 @@
 /*
  ============================================================================
- Name        : CLOCK.h
+ Name        : DigtialWatch.h
  Author      : Omar Medhat Mohamed
- Description : Header File for the CLOCK Driver
- Date        : 13/4/2024
+ Description : Header File for the DigtialWatch Driver
+ Date        : 15/4/2024
  ============================================================================
  */
 #ifndef CLOCK_H_
@@ -17,18 +17,10 @@
 #include "Services/Scheduler/Scheduler.h"
 #include "Services/Scheduler/Scheduler_cfg.h"
 #include "APP/Clock/Clock_Date.h"
+#include "APP/StopWatch/StopWatch.h"
 #include "APP/Display/Display.h"
-#include "HAL/LCD/LCD.h"
-/*******************************************************************************
- *                                Definitions                                  *
- *******************************************************************************/
+#include "HAL/HSwitch/HSwitch.h"
+#include <stdio.h>
 
-/*******************************************************************************
- *                        	  Types Declaration                                 *
- *******************************************************************************/
-
-/*******************************************************************************
- *                  	    Functions Prototypes                               *
- *******************************************************************************/
 
 #endif

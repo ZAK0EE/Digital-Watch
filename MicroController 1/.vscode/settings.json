@@ -13,7 +13,8 @@
         "clk_control.h": "c",
         "display.h": "c",
         "lcd.h": "c",
-        "assertparam.h": "c"
+        "assertparam.h": "c",
+        "stopwatch.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
