@@ -17,7 +17,7 @@
 /********************************************************************************************************/
 /************************************************Defines*************************************************/
 /********************************************************************************************************/
-
+#define BUTTON_PERIODIC_TIMEMS 150
 
 
 /********************************************************************************************************/
@@ -32,10 +32,7 @@ typedef enum
     BUTTON_INCREMENT,        /**< Button for incrementing a value. */
     BUTTON_MODE,             /**< Button for changing the mode. */
     BUTTON_EDIT,             /**< Button for entering edit mode. */
-    BUTTON_TOSEND_INCREMENT, /**< Button to send an increment command over UART. */
-    BUTTON_TOSEND_MODE,      /**< Button to send a mode change command over UART. */
-    BUTTON_TOSEND_EDIT,      /**< Button to send an edit command over UART. */
-    _NUM_OF_BUTTONS          /**< Number of buttons. */
+    _NUM_OF_BUTTONS,          /**< Number of buttons. */
 } Button_ID_t;
 
 

@@ -53,14 +53,6 @@ typedef enum
     BUTTON_SOURCE_UART  /**< Button source is UART. */
 } Button_source_t;
 
-/**
- * @brief Configuration structure for a button.
- */
-typedef struct
-{
-    uint8_t SwitchID;               /**< ID of the switch/button. */
-    Button_source_t ButtonSource;   /**< Source of the button (GPIO or UART). */
-} Button_config_t;
 
 
 /********************************************************************************************************/
@@ -87,6 +79,8 @@ Button_state_t Button_isPressed(Button_ID_t ButtonID);
  * @return The hold state of the button (pressed and held or not).
  */
 Button_holdState_t Button_isPressedAndHeld(Button_ID_t ButtonID);
+
+void Button_task(void);
 
 
 
