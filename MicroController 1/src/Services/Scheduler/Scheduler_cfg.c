@@ -36,6 +36,8 @@ extern void Stopwatch_test(void);
 extern void DW_Runnable(void) ;
 extern void HSwitch_Runnable(void);
 void Update_Switch_Runnable(void);
+extern void Button_task(void);
+
 Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] = 
 {
 
@@ -78,5 +80,12 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
         .CallBack = DW_Runnable,
         .DelayMS = 100,
         .PeriodicityMS = 100,
+   },
+
+   [SCHED_BUTTON_TASK]=
+   {
+        .CallBack = Button_task,
+        .DelayMS = 40,
+        .PeriodicityMS = 150,
    }
 };
