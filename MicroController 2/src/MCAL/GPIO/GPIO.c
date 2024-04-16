@@ -1,204 +1,282 @@
-#include "GPIO.h"
+#include "MCAL/GPIO/GPIO.h"
 
-/********************************************************************/
+/*Ports Base Adresses*/
+#define GPIO_PORT_A_BASE_ADDRESS 0x40020000
+#define GPIO_PORT_B_BASE_ADDRESS 0x40020400
+#define GPIO_PORT_C_BASE_ADDRESS 0x40020800
 
-#define IS_VALID_GPIO_MODE(mode) \
-    (((mode) == GPIO_MODE_INPUT_NOPULL) || \
-     ((mode) == GPIO_MODE_INPUT_PULLUP) || \
-     ((mode) == GPIO_MODE_INPUT_PULLDOWN) || \
-     ((mode) == GPIO_MODE_INPUT_ANALOG) || \
-     ((mode) == GPIO_MODE_OUTPUT_PUSHPULL_NOPULL) || \
-     ((mode) == GPIO_MODE_OUTPUT_PUSHPULL_PULLUP) || \
-     ((mode) == GPIO_MODE_OUTPUT_PUSHPULL_PULLDOWN) || \
-     ((mode) == GPIO_MODE_OUTPUT_OPENDRAIN_NOPULL) || \
-     ((mode) == GPIO_MODE_OUTPUT_OPENDRAIN_PULLUP) || \
-     ((mode) == GPIO_MODE_OUTPUT_OPENDRAIN_PULLDOWN) || \
-     ((mode) == GPIO_MODE_ALTERNATE_PUSHPULL_NOPULL) || \
-     ((mode) == GPIO_MODE_ALTERNATE_PUSHPULL_PULLUP) || \
-     ((mode) == GPIO_MODE_ALTERNATE_PUSHPULL_PULLDOWN) || \
-     ((mode) == GPIO_MODE_ALTERNATE_OPENDRAIN_NOPULL) || \
-     ((mode) == GPIO_MODE_ALTERNATE_OPENDRAIN_PULLUP) || \
-     ((mode) == GPIO_MODE_ALTERNATE_OPENDRAIN_PULLDOWN))
+/*MASKS*/
+#define GPIO_MODER_MASK   0x00000003
+#define GPIO_OTYPR_MASK   0x00000001
+#define GPIO_OSPEEDR_MASK 0x00000003
+#define GPIO_PUPDR_MASK   0x00000003
 
-/*********************************************************************/
-#define IS_VALID_GPIO_PORT(port) \
-    (((port) == GPIO_A) || \
-     ((port) == GPIO_B) || \
-     ((port) == GPIO_C) || \
-     ((port) == GPIO_D) || \
-     ((port) == GPIO_E) || \
-     ((port) == GPIO_H))
+#define GPIO_MODER_SHIFT_MASK   0x00000002
+#define GPIO_OTYPR_SHIFT_MASK   0x00000001
+#define GPIO_OSPEEDR_SHIFT_MASK 0x00000002
+#define GPIO_PUPDR_SHIFT_MASK   0x00000002
 
-/*********************************************************************/
+#define GPIO_BSRR_MASK 0x00000010
 
-#define IS_VALID_GPIO_PIN(pin) \
-    (((pin) >= GPIO_PIN0) && ((pin) <= GPIO_PIN15))
+#define GPIO_4_BIT_MASK    0x0000000FUL
 
-/*********************************************************************/
-
-#define IS_VALID_GPIO_STATE(state) \
-    (((state) == GPIO_SET_STATE) || \
-     ((state) == GPIO_RESET_STATE))
-
-/*********************************************************************/
-
-#define IS_VALID_GPIO_SPEED(speed) \
-    (((speed) >= GPIO_LOW_SPEED) && ((speed) <= GPIO_VERY_HIGH_SPEED))
-
-/*********************************************************************/
-
-#define IS_VALID_GPIO_AF(af) \
-    (((af) >= GPIO_AF0) && ((af) <= GPIO_AF15))
-
-/*********************************************************************/
-
-#define MASK_1_BITS         0x01UL
-#define MASK_2_BITS         0x03UL
-#define MASK_4_BITS         0x0FUL
-
-
-#define GET_MODE_FROM_CONFIG_MASK(MASK)             (MASK & 0x0FUL)
-#define GET_PULLING_FROM_CONFIG_MASK(MASK)          ((MASK & 0x0F0UL) >> 4)
-#define GET_OUTPUT_TYPE_FROM_CONFIG_MASK(MASK)      ((MASK & 0x0F00UL) >> 8)
-/*********************************************************************/
-
-typedef struct{
-    volatile u32 MODER;        // GPIO port mode register
-    volatile u32 OTYPER;       // GPIO port output type register
-    volatile u32 OSPEEDR;      // GPIO port output speed register
-    volatile u32 PUPDR;        // GPIO port pull-up/pull-down register
-    volatile u32 IDR;          // GPIO port input data register
-    volatile u32 ODR;          // GPIO port output data register
-    volatile u32 BSRR;         // GPIO port bit set/reset register
-    volatile u32 LCKR;         // GPIO port configuration lock register
-    volatile u32 AFRL;         // GPIO alternate function low register
-    volatile u32 AFRH;         // GPIO alternate function high register
-}GPIO_regs_t;
-
-/*********************************************************************/
-
-
-
-GPIO_errorState_t GPIO_initPin(GPIO_pinConfig_t *pinConfig)
+typedef struct
 {
-    GPIO_errorState_t Loc_errorState = GPIO_Nok;
-    volatile GPIO_regs_t* const GPIO = (volatile GPIO_regs_t*)pinConfig->port;
 
-    if(pinConfig == NULLPTR)
+    u32 MODER_MASK;
+    u32 OTYPR_MASK;
+    u32 PUPDR_MASK;
+
+}Masks_t;
+
+/*Peripheral Registers*/
+typedef struct
+{
+    
+    u32 GPIO_MODER;
+    u32 GPIO_OTYPER;
+    u32 GPIO_OSPEEDR;
+    u32 GPIO_PUPDR;
+    u32 GPIO_IDR;
+    u32 GPIO_ODR;
+    u32 GPIO_BSRR;
+    u32 GPIO_LCKR;
+    u32 AFRL;
+    u32 AFRH;
+
+}GPIO_Registers_t;
+
+static volatile GPIO_Registers_t * const GPIO [3] = {(volatile GPIO_Registers_t *const)GPIO_PORT_A_BASE_ADDRESS,(volatile GPIO_Registers_t *const)GPIO_PORT_B_BASE_ADDRESS,(volatile GPIO_Registers_t *const)GPIO_PORT_C_BASE_ADDRESS};
+
+/*STATIC FUNCTIONS*/
+static Masks_t Generate_Mask (u32 config, u32 pin);
+static Masks_t Generate_CLEAR_Mask (u32 config, u32 pin);
+
+Error_t GPIO_Init_Pin (GPIO_Pin_Confg_t * Pin_Config)
+{
+    Error_t Error = ERROR_Ok;
+    
+    Masks_t Clear_Mask, Mask;
+
+    Clear_Mask = Generate_CLEAR_Mask(Pin_Config->mode,Pin_Config->pin);
+    Mask = Generate_Mask(Pin_Config->mode,Pin_Config->pin);
+    
+    u32 Temp_Reg = GPIO[Pin_Config->port]->GPIO_MODER;
+    Temp_Reg &= Clear_Mask.MODER_MASK;
+    Temp_Reg |= Mask.MODER_MASK;
+    GPIO[Pin_Config->port]->GPIO_MODER = Temp_Reg;
+
+    Temp_Reg = GPIO[Pin_Config->port]->GPIO_OTYPER;
+    Temp_Reg &= Clear_Mask.OTYPR_MASK;
+    Temp_Reg |= Mask.OTYPR_MASK;
+    GPIO[Pin_Config->port]->GPIO_OTYPER = Temp_Reg;
+
+    Temp_Reg = GPIO[Pin_Config->port]->GPIO_PUPDR;
+    Temp_Reg &= Clear_Mask.PUPDR_MASK;
+    Temp_Reg |= Mask.PUPDR_MASK;
+    GPIO[Pin_Config->port]->GPIO_PUPDR = Temp_Reg;
+
+    Temp_Reg = GPIO[Pin_Config->port]->GPIO_OSPEEDR;
+    Temp_Reg &= (~(0x00000003)<<(Pin_Config->pin*2));
+    Temp_Reg |= (Pin_Config->speed << (Pin_Config->pin*2));
+    GPIO[Pin_Config->port]->GPIO_OSPEEDR = Temp_Reg; 
+
+    /*AF*/
+    u32 AF_Pin = Pin_Config->pin % 8;
+    if (Pin_Config->pin > 7)
     {
-        Loc_errorState = GPIO_NullPtr;
-    }
-    else if(!IS_VALID_GPIO_PORT(pinConfig->port))
-    {
-        Loc_errorState = GPIO_InvalidParameter;
-    }
-    else if(!IS_VALID_GPIO_PIN(pinConfig->pin))
-    {
-        Loc_errorState = GPIO_InvalidParameter;
-    }
-    else if(!IS_VALID_GPIO_MODE(pinConfig->mode))
-    {
-        Loc_errorState = GPIO_InvalidParameter;
-    }
-    else if(!IS_VALID_GPIO_SPEED(pinConfig->speed))
-    {
-        Loc_errorState = GPIO_InvalidParameter;
+        Temp_Reg  = GPIO[Pin_Config->port]->AFRH;
+        Temp_Reg &= (~((GPIO_4_BIT_MASK) << (AF_Pin * 4)));
+        Temp_Reg |= (Pin_Config->AF << (AF_Pin*4));
+        GPIO[Pin_Config->port]->AFRH = Temp_Reg;
     }
     else
     {
-        Loc_errorState = GPIO_Ok;
-        u32 Loc_mode = GET_MODE_FROM_CONFIG_MASK(pinConfig->mode);
-        u32 Loc_pulling = GET_PULLING_FROM_CONFIG_MASK(pinConfig->mode);
-        u32 Loc_outputType = GET_OUTPUT_TYPE_FROM_CONFIG_MASK(pinConfig->mode);
-
-        GPIO->MODER    = ( (GPIO->MODER   & ~(MASK_2_BITS << (pinConfig->pin * 2))) | (Loc_mode         << (pinConfig->pin * 2)) );
-        GPIO->PUPDR    = ( (GPIO->PUPDR   & ~(MASK_2_BITS << (pinConfig->pin * 2))) | (Loc_pulling      << (pinConfig->pin * 2)) );
-        GPIO->OTYPER   = ( (GPIO->OTYPER  & ~(MASK_1_BITS << (pinConfig->pin)    )) | (Loc_outputType   << (pinConfig->pin)    ) );
-        GPIO->OSPEEDR  = ( (GPIO->OSPEEDR & ~(MASK_2_BITS << (pinConfig->pin * 2))) | (pinConfig->speed << (pinConfig->pin * 2)) );
+        Temp_Reg  = GPIO[Pin_Config->port]->AFRL;
+        Temp_Reg &= (~(GPIO_4_BIT_MASK) << (Pin_Config->pin * 4));
+        Temp_Reg |= (Pin_Config->AF << (AF_Pin*4));
+        GPIO[Pin_Config->port]->AFRL = Temp_Reg;
     }
+    
+    
+    
 
-    return Loc_errorState;
+    return Error;
 }
 
-GPIO_errorState_t GPIO_setPin(void* port, u32 pin, u32 state)
+Error_t GPIO_Set_Pin_State(u32 GPIO_PORT, u32 GPIO_PIN, u32 GPIO_State)
 {
-    GPIO_errorState_t Loc_errorState = GPIO_Nok;
-    volatile GPIO_regs_t* const GPIO = (volatile GPIO_regs_t*)port;
-
-    if(port == NULLPTR)
+    /*Add Validation*/
+    Error_t Error_State = ERROR_Ok;
+    switch (GPIO_State)
     {
-        Loc_errorState = GPIO_NullPtr;
+    case GPIO_PIN_ON:
+        GPIO[GPIO_PORT]->GPIO_BSRR = (1 << GPIO_PIN);
+        break;
+    case GPIO_PIN_OFF:
+        GPIO[GPIO_PORT]->GPIO_BSRR = (1 << (GPIO_PIN + GPIO_BSRR_MASK));
+        break;
+    
+    default:
+        break;
     }
-    else if(!IS_VALID_GPIO_PORT(port))
-    {
-        Loc_errorState = GPIO_InvalidParameter;
-    }
-    else if(!IS_VALID_GPIO_PIN(pin))
-    {
-        Loc_errorState = GPIO_InvalidParameter;
-    }
-    else if(!IS_VALID_GPIO_STATE(state))
-    {
-        Loc_errorState = GPIO_InvalidParameter;
-    }
-    else
-    {
-        Loc_errorState = GPIO_Ok;
-        GPIO->BSRR = MASK_1_BITS<<(pin + (!state * 16));
-    }
-
-    return Loc_errorState;
+    return Error_State;
 }
 
-GPIO_errorState_t GPIO_getPin(void* port, u32 pin, u32 *pinState)
+Error_t GPIO_Get_Pin_State(u8 GPIO_PORT, u8 GPIO_PIN, u8 *Pin_State)
 {
-    GPIO_errorState_t Loc_errorState = GPIO_Nok;
-    volatile GPIO_regs_t* const GPIO = (volatile GPIO_regs_t*)port;
-
-    if(port == NULLPTR)
-    {
-        Loc_errorState = GPIO_NullPtr;
-    }
-    else if(!IS_VALID_GPIO_PORT(port))
-    {
-        Loc_errorState = GPIO_InvalidParameter;
-    }
-    else if(!IS_VALID_GPIO_PIN(pin))
-    {
-        Loc_errorState = GPIO_InvalidParameter;
-    }
-    else
-    {
-        Loc_errorState = GPIO_Ok;
-        *pinState = (GPIO->IDR >> pin) & MASK_1_BITS;
-    }
-    return Loc_errorState;
+    /*Validation*/
+    Error_t Error_State = ERROR_Ok;
+    *Pin_State = ((GPIO[GPIO_PORT]->GPIO_IDR) >> GPIO_PIN ) & 1UL;
+    return Error_State;
 }
 
-GPIO_errorState_t GPIO_configAlterFunc(void* port, u32 pin, u32 alterFunc)
+static Masks_t Generate_Mask (u32 config, u32 pin)
 {
-    GPIO_errorState_t Loc_errorState = GPIO_Nok;
-    volatile GPIO_regs_t* const GPIO = (volatile GPIO_regs_t*)port;
+    Masks_t Mask;
 
-    if(port == NULLPTR)
+    switch (config)
     {
-        Loc_errorState = GPIO_NullPtr;
+    case GPIO_CONFG_INPUT_FLOATING: Mask.MODER_MASK = 0x00000000;
+                                    Mask.OTYPR_MASK = 0x00000000;
+                                    Mask.PUPDR_MASK = 0x00000000;
+        break;
+    case GPIO_CONFG_INPUT_PU: Mask.MODER_MASK = 0x00000000;
+                              Mask.OTYPR_MASK = 0x00000000;
+                              Mask.PUPDR_MASK = (0x00000001 << (pin * 2));
+        break;
+    case GPIO_CONFG_INPUT_PD: Mask.MODER_MASK = 0x00000000;
+                              Mask.OTYPR_MASK = 0x00000000;
+                              Mask.PUPDR_MASK = (0x00000002 << (pin * 2));
+        break;
+    case GPIO_CONFG_ANALOG: Mask.MODER_MASK = (0x00000003 << (pin * 2));
+                            Mask.OTYPR_MASK = 0x00000000;
+                            Mask.PUPDR_MASK = 0x00000000;
+        break;
+    case GPIO_CONFG_OUTPUT_OD: Mask.MODER_MASK = (0x00000001 << (pin * 2));
+                               Mask.OTYPR_MASK = (0x00000001 << pin);
+                               Mask.PUPDR_MASK = 0x00000000;
+        break;
+    case GPIO_CONFG_OUTPUT_OD_PU: Mask.MODER_MASK = (0x00000001 << (pin * 2));
+                                  Mask.OTYPR_MASK = (0x00000001 << pin);
+                                  Mask.PUPDR_MASK = (0x00000001 << (pin * 2));
+        break;
+    case GPIO_CONFG_OUTPUT_OD_PD: Mask.MODER_MASK = (0x00000001 << (pin * 2));
+                                  Mask.OTYPR_MASK = (0x00000001 << pin);
+                                  Mask.PUPDR_MASK = (0x00000002 << (pin * 2));
+        break;
+    case GPIO_CONFG_OUTPUT_PP: Mask.MODER_MASK = (0x00000001 << (pin * 2));
+                               Mask.OTYPR_MASK = 0x00000000;
+                               Mask.PUPDR_MASK = 0x00000000;
+        break;
+    case GPIO_CONFG_OUTPUT_PP_PU: Mask.MODER_MASK = (0x00000001 << (pin * 2));
+                                  Mask.OTYPR_MASK = 0x00000000;
+                                  Mask.PUPDR_MASK = (0x00000001 << (pin * 2));
+        break;
+    case GPIO_CONFG_OUTPUT_PP_PD: Mask.MODER_MASK = (0x00000001 << (pin * 2));
+                                  Mask.OTYPR_MASK = 0x00000000;
+                                  Mask.PUPDR_MASK = (0x00000002 << (pin * 2));
+        break;
+    case GPIO_CONFG_AF_OD: Mask.MODER_MASK = (0x00000002 << (pin * 2));
+                           Mask.OTYPR_MASK = (0x00000001 << pin);
+                           Mask.PUPDR_MASK = 0x00000000;
+        break;
+    case GPIO_CONFG_AF_OD_PU: Mask.MODER_MASK = (0x00000002 << (pin * 2));
+                              Mask.OTYPR_MASK = (0x00000001 << pin);
+                              Mask.PUPDR_MASK = (0x00000001 << (pin * 2));
+        break;
+    case GPIO_CONFG_AF_OD_PD: Mask.MODER_MASK = (0x00000002 << (pin * 2));
+                              Mask.OTYPR_MASK = (0x00000001 << pin);
+                              Mask.PUPDR_MASK = (0x00000002 << (pin * 2));
+        break;
+    case GPIO_CONFG_AF_PP: Mask.MODER_MASK = (0x00000002 << (pin * 2));
+                           Mask.OTYPR_MASK = 0x00000000;
+                           Mask.PUPDR_MASK = 0x00000000;
+        break;
+    case GPIO_CONFG_AF_PP_PU: Mask.MODER_MASK = (0x00000002 << (pin * 2));
+                              Mask.OTYPR_MASK = 0x00000000;
+                              Mask.PUPDR_MASK = (0x00000001 << (pin * 2));
+        break;
+    case GPIO_CONFG_AF_PP_PD: Mask.MODER_MASK = (0x00000002 << (pin * 2));
+                              Mask.OTYPR_MASK = 0x00000000;
+                              Mask.PUPDR_MASK = (0x00000002 << (pin * 2));
+        break;
     }
-    else if((!IS_VALID_GPIO_PORT(port)) || (!IS_VALID_GPIO_PIN(pin)) || (!IS_VALID_GPIO_AF(alterFunc)))
+
+    return Mask;
+}
+
+static Masks_t Generate_CLEAR_Mask (u32 config, u32 pin)
+{
+    Masks_t Mask;
+
+    switch (config)
     {
-        Loc_errorState = GPIO_InvalidParameter;
+    case GPIO_CONFG_INPUT_FLOATING: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                                    Mask.OTYPR_MASK = 0xFFFFFFFF;
+                                    Mask.PUPDR_MASK = 0xFFFFFFFF;
+        break;
+    case GPIO_CONFG_INPUT_PU: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                              Mask.OTYPR_MASK = 0xFFFFFFFF;
+                              Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
+    case GPIO_CONFG_INPUT_PD: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                              Mask.OTYPR_MASK = 0xFFFFFFFF;
+                              Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
+    case GPIO_CONFG_ANALOG: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                            Mask.OTYPR_MASK = 0xFFFFFFFF;
+                            Mask.PUPDR_MASK = 0xFFFFFFFF;
+        break;
+    case GPIO_CONFG_OUTPUT_OD: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                               Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                               Mask.PUPDR_MASK = 0xFFFFFFFF;
+        break;
+    case GPIO_CONFG_OUTPUT_OD_PU: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                                  Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                                  Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
+    case GPIO_CONFG_OUTPUT_OD_PD: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                                  Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                                  Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
+    case GPIO_CONFG_OUTPUT_PP: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                               Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                               Mask.PUPDR_MASK = 0xFFFFFFFF;
+        break;
+    case GPIO_CONFG_OUTPUT_PP_PU: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                                  Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                                  Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
+    case GPIO_CONFG_OUTPUT_PP_PD: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                                  Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                                  Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
+    case GPIO_CONFG_AF_OD: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                           Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                           Mask.PUPDR_MASK = 0xFFFFFFFF;
+        break;
+    case GPIO_CONFG_AF_OD_PU: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                              Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                              Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
+    case GPIO_CONFG_AF_OD_PD: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                              Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                              Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
+    case GPIO_CONFG_AF_PP: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                           Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                           Mask.PUPDR_MASK = 0xFFFFFFFF;
+        break;
+    case GPIO_CONFG_AF_PP_PU: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                              Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                              Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
+    case GPIO_CONFG_AF_PP_PD: Mask.MODER_MASK = (~(0x00000003 << (pin*2) ));
+                              Mask.OTYPR_MASK = (~(0x00000001 << (pin) ));
+                              Mask.PUPDR_MASK = (~(0x00000003 << (pin*2) ));
+        break;
     }
-    else
-    {
-        Loc_errorState = GPIO_Ok;
-        if(pin <= 7)
-        {
-            GPIO->AFRL = (((GPIO->AFRL) & ~(MASK_4_BITS << pin)) | (alterFunc << pin));
-        }
-        else if(pin > 7)
-        {
-            GPIO->AFRH = (((GPIO->AFRH) & ~(MASK_4_BITS << pin)) | (alterFunc << pin));
-        }
-    }
-    return Loc_errorState;
+
+    return Mask;
 }
