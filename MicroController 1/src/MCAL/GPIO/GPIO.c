@@ -187,7 +187,7 @@ MCAL_Status_t GPIO_setPinAF(GPIO_Port_t Port, GPIO_Pin_t PinNumber,  GPIO_AF_NUM
 
     GPIO_TypeDef volatile *const GPIO = GPIOS[Port];
 
-    if (PinNumber <= GPIO_AF_NUM_7)
+    if (PinNumber <= GPIO_PIN7)
     {   
         GPIO->AFRL = (GPIO->AFRL & ~(GPIO_AF_CLR_MASK<<(PinNumber*4))) | (AFNumber<<(PinNumber*4));
     }

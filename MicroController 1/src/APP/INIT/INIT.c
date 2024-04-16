@@ -37,4 +37,8 @@ void InitSys (void)
     
     /* Initialize display */
     Display_init();
+
+    /* Initialize Buttons */
+    Button_init();
+
 }
