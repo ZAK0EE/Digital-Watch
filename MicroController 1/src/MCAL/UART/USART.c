@@ -244,6 +244,10 @@ Error_enumStatus_t USART_TxBufferAsyncZeroCopy(USART_UserReq_t *Ptr_UserReq)
             /* Enable USART transmit data register empty interrupt */
             ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 |= UART_TXE_ENABLE_MASK;
         }
+        else
+        {
+            Loc_enumReturnStatus = Status_enumBusyState;
+        }
     }
     /* Return the status of the transmission */
     return Loc_enumReturnStatus;
@@ -289,7 +293,7 @@ Error_enumStatus_t USART_RxBufferAsyncZeroCopy(USART_UserReq_t *Ptr_UserReq)
         if (RxReq[Loc_Reqidx].state == USART_ReqReady)
         {
             /* Clear RXNE flag */
-            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 &= UART_RX_CLR_ENABLE_MASK;
+           // ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 &= UART_RX_CLR_ENABLE_MASK;
             /* Set receive request state to busy */
             RxReq[Loc_Reqidx].state = USART_ReqBusy;
             /* Copy receive buffer parameters from user request */
@@ -301,6 +305,10 @@ Error_enumStatus_t USART_RxBufferAsyncZeroCopy(USART_UserReq_t *Ptr_UserReq)
             ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 |= UART_RX_ENABLE_MASK;
             /* Enable USART receive data register not empty interrupt */
             ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 |= UART_RXE_ENABLE_MASK;
+        }
+        else
+        {
+            Loc_enumReturnStatus = Status_enumBusyState;
         }
     }
 
@@ -371,6 +379,10 @@ Error_enumStatus_t USART_SendByte(USART_UserReq_t *Ptr_UserReq)
             }
             /* Set transmit request state back to ready */
             TxReq[Loc_Reqidx].state = USART_ReqReady;
+        }
+        else
+        {
+            Loc_enumReturnStatus = Status_enumBusyState;
         }
     }
     /* Return the status of the transmission */
@@ -450,6 +462,10 @@ Error_enumStatus_t USART_GetByte(USART_UserReq_t *Ptr_UserReq)
             ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 &= ~UART_RX_ENABLE_MASK;
             /* Set receive request state back to ready */
             RxReq[Loc_Reqidx].state = USART_ReqReady;
+        }
+        else
+        {
+            Loc_enumReturnStatus = Status_enumBusyState;
         }
     }
     /* Return the status of the reception */
@@ -603,7 +619,7 @@ void USART1_IRQHandler(void)
             {
                 RxReq[g_UART1_idx].state = USART_ReqReady;
                 /* Disable RXE interrupt */
-                ((USART_PERI_t *)USART[g_UART1_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
+                //((USART_PERI_t *)USART[g_UART1_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
                 /* Call callback function if available */
                 if (RxReq[g_UART1_idx].CB)
                 {
@@ -661,7 +677,7 @@ void USART2_IRQHandler(void)
             {
                 RxReq[g_UART2_idx].state = USART_ReqReady;
                 /* Disable RXE interrupt */
-                ((USART_PERI_t *)USART[g_UART2_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
+                //((USART_PERI_t *)USART[g_UART2_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
                 /* Call callback function if available */
                 if (RxReq[g_UART2_idx].CB)
                 {
@@ -719,7 +735,7 @@ void USART6_IRQHandler(void)
             {
                 RxReq[g_UART6_idx].state = USART_ReqReady;
                 /* Disable RXE interrupt */
-                ((USART_PERI_t *)USART[g_UART6_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
+                //((USART_PERI_t *)USART[g_UART6_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
                 /* Call callback function if available */
                 if (RxReq[g_UART6_idx].CB)
                 {

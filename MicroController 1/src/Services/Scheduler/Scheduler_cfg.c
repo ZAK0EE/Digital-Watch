@@ -65,19 +65,18 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
    {
         .CallBack = HSwitch_Runnable,
         .DelayMS = 40,
-        .PeriodicityMS = 1,
+        .PeriodicityMS = 5,
+   },
+    [SCHED_UPDATE_SWICH]=
+   {
+        .CallBack = Update_Switch_Runnable,
+        .DelayMS = 50,
+        .PeriodicityMS = 150,
    },
    [SCHED_DigitalWatch_Task]=
    {
         .CallBack = DW_Runnable,
         .DelayMS = 100,
         .PeriodicityMS = 100,
-   },
-   [SCHED_UPDATE_SWICH]=
-   {
-        .CallBack = Update_Switch_Runnable,
-        .DelayMS = 40,
-        .PeriodicityMS = 150,
    }
-
 };
