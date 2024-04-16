@@ -350,3 +350,4 @@ static void DW_StopWatch_Modes(void)
         break;
     }
 }
+ 
