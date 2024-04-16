@@ -45,7 +45,7 @@ typedef enum
     SCHED_UPDATE_SWICH,
     SCHED_DigitalWatch_Task,
     SCHED_BUTTON_TASK,
-    
+    SCHED_BUTTON_TEST,
     _NUM_OF_RUNNABLES,    /**< Total number of runnables. Do not modify. */
 } Sched_Runnable_Name_t;
 

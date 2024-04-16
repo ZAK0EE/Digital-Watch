@@ -87,7 +87,7 @@ Button_holdState_t Button_isPressedAndHeld(Button_ID_t ButtonID)
     return Button_status[ButtonID].IsHeld;
 }
 
-static void Button_task(void)
+void Button_task(void)
 {
     Button_ID_t ID = 0;
     for(ID = 0; ID < _NUM_OF_BUTTONS; ID++)

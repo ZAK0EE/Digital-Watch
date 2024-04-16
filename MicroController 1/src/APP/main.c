@@ -5,11 +5,11 @@ void assert_failed(void)
      while(1);
 }
 
-extern void button_test_main(void);
+extern void Button_test_main(void);
 int main(void)
 {
     InitSys();
-    button_test_main();
+    Button_test_main();
     Sched_init();
     Sched_start();
 }

@@ -37,6 +37,7 @@ extern void DW_Runnable(void) ;
 extern void HSwitch_Runnable(void);
 void Update_Switch_Runnable(void);
 extern void Button_task(void);
+extern void Button_test(void);
 
 Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] = 
 {
@@ -86,6 +87,13 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
    {
         .CallBack = Button_task,
         .DelayMS = 40,
-        .PeriodicityMS = 150,
-   }
+        .PeriodicityMS = 100,
+   },
+
+   [SCHED_BUTTON_TEST]=
+   {
+        .CallBack = Button_test,
+        .DelayMS = 100,
+        .PeriodicityMS = 100,
+   }   
 };
