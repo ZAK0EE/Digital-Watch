@@ -98,7 +98,7 @@ void HUART_Runnable(void)
             g_HUART_Type = HUSART_NoReq ;
        }
             /* Checks if there's a pending receive request */
-        if (GetReq[g_Index_Of_Receiving].state == HUSART_ReqBusy)
+        //if (GetReq[g_Index_Of_Receiving].state == HUSART_ReqBusy)
         {
             /* Initiates asynchronous reception of data */
             USART_RxBufferAsyncZeroCopy(&(GetReq[g_Index_Of_Receiving].BuffReqInfo));
