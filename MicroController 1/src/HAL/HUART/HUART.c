@@ -84,37 +84,37 @@ static uint8_t g_Index_Of_Receiving;
  * @param    : None
  * @return   : None
  **/
-void HUART_Runnable(void)
-{
-    switch (g_HUART_Type)
-    {
-    case HUSART_HandleReq:
-        /* Checks if there's a pending send request */
-        if (SendReq[g_Index_Of_Sending].state == HUSART_ReqBusy)
-        {
-            /* Initiates asynchronous transmission of data */
-            USART_TxBufferAsyncZeroCopy(&(SendReq[g_Index_Of_Sending].BuffReqInfo));
-            SendReq[g_Index_Of_Sending].state = HUSART_ReqReady;
-            g_HUART_Type = HUSART_NoReq ;
-       }
-            /* Checks if there's a pending receive request */
-        //if (GetReq[g_Index_Of_Receiving].state == HUSART_ReqBusy)
-        {
-            /* Initiates asynchronous reception of data */
-            USART_RxBufferAsyncZeroCopy(&(GetReq[g_Index_Of_Receiving].BuffReqInfo));
-            GetReq[g_Index_Of_Receiving].state = HUSART_ReqReady; 
-            g_HUART_Type = HUSART_NoReq ;
-        }
-        break;       
-    case HUSART_NoReq:
-        /* No action is taken when the HUART is turned off */
-        /* Do Nothing */
-        break;
+// void HUART_Runnable(void)
+// {
+//     switch (g_HUART_Type)
+//     {
+//     case HUSART_HandleReq:
+//         /* Checks if there's a pending send request */
+//         if (SendReq[g_Index_Of_Sending].state == HUSART_ReqBusy)
+//         {
+//             /* Initiates asynchronous transmission of data */
+//             USART_TxBufferAsyncZeroCopy(&(SendReq[g_Index_Of_Sending].BuffReqInfo));
+//             SendReq[g_Index_Of_Sending].state = HUSART_ReqReady;
+//             g_HUART_Type = HUSART_NoReq ;
+//        }
+//             /* Checks if there's a pending receive request */
+//         //if (GetReq[g_Index_Of_Receiving].state == HUSART_ReqBusy)
+//         {
+//             /* Initiates asynchronous reception of data */
+//             USART_RxBufferAsyncZeroCopy(&(GetReq[g_Index_Of_Receiving].BuffReqInfo));
+//             GetReq[g_Index_Of_Receiving].state = HUSART_ReqReady; 
+//             g_HUART_Type = HUSART_NoReq ;
+//         }
+//         break;       
+//     case HUSART_NoReq:
+//         /* No action is taken when the HUART is turned off */
+//         /* Do Nothing */
+//         break;
         
-    default:
-        break;
-    }
-}
+//     default:
+//         break;
+//     }
+// }
 
 /**
  * @brief    : Initializes the UART peripherals and associated GPIO pins.
@@ -214,19 +214,20 @@ Error_enumStatus_t HUART_SendBuffAsync(HUSART_UserReq_t *Ptr_HUARTSendReq)
             break;
         }
         /* Check if the UART send request state is ready to send data */
-        if (SendReq[g_Index_Of_Sending].state == HUSART_ReqReady)
-        {
+        // if (SendReq[g_Index_Of_Sending].state == HUSART_ReqReady)
+        // {
             SendReq[g_Index_Of_Sending].state = HUSART_ReqBusy;
             SendReq[g_Index_Of_Sending].BuffReqInfo.Ptr_buffer = Ptr_HUARTSendReq->Ptr_buffer;
             SendReq[g_Index_Of_Sending].BuffReqInfo.Buff_Len = Ptr_HUARTSendReq->Buff_Len;
             SendReq[g_Index_Of_Sending].BuffReqInfo.Buff_cb = Ptr_HUARTSendReq->Buff_cb;
             SendReq[g_Index_Of_Sending].BuffReqInfo.USART_ID = Ptr_HUARTSendReq->USART_ID;
+            USART_TxBufferAsyncZeroCopy(&(SendReq[g_Index_Of_Sending].BuffReqInfo));
             g_HUART_Type = HUSART_HandleReq ;
-        }
-        else
-        {
-            Loc_enumReturnStatus = Status_enumBusyState;
-        }
+        // }
+        // else
+        // {
+        //     Loc_enumReturnStatus = Status_enumBusyState;
+        // }
     }
     
     /* Return the status of the UART send operation initiation */
@@ -255,19 +256,20 @@ Error_enumStatus_t HUART_ReceiveBuffAsync(HUSART_UserReq_t *Ptr_HUARTGetReq)
         Loc_enumReturnStatus = Status_enumNULLPointer;
     }
     /* Check if the UART receive request state is ready to receive data */
-    else if (GetReq[Ptr_HUARTGetReq->USART_ID].state == HUSART_ReqReady)
-    {
+    // else if (GetReq[Ptr_HUARTGetReq->USART_ID].state == HUSART_ReqReady)
+    // {
         GetReq[g_Index_Of_Receiving].state = HUSART_ReqBusy;
         GetReq[g_Index_Of_Receiving].BuffReqInfo.Ptr_buffer = Ptr_HUARTGetReq->Ptr_buffer;
         GetReq[g_Index_Of_Receiving].BuffReqInfo.Buff_Len = Ptr_HUARTGetReq->Buff_Len;
         GetReq[g_Index_Of_Receiving].BuffReqInfo.Buff_cb = Ptr_HUARTGetReq->Buff_cb;
         GetReq[g_Index_Of_Receiving].BuffReqInfo.USART_ID = Ptr_HUARTGetReq->USART_ID;
+        USART_RxBufferAsyncZeroCopy(&(GetReq[g_Index_Of_Receiving].BuffReqInfo));
         g_HUART_Type = HUSART_HandleReq ;
-    }
-    else
-    {
-        Loc_enumReturnStatus = Status_enumBusyState;
-    }
+    // }
+    // else
+    // {
+    //     Loc_enumReturnStatus = Status_enumBusyState;
+    // }
 
     /* Return the status of the UART receive operation initiation */
     return Loc_enumReturnStatus;

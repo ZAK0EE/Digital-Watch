@@ -98,10 +98,10 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
         .DelayMS = 100,
         .PeriodicityMS = 100,
    },
-     [SCHED_HUART_TASK]=
-     {
-            .CallBack = HUART_Runnable ,
-            .DelayMS = 50,
-            .PeriodicityMS = 50,
-     }
+     // [SCHED_HUART_TASK]=
+     // {
+     //        .CallBack = HUART_Runnable ,
+     //        .DelayMS = 50,
+     //        .PeriodicityMS = 50,
+     // }
 };

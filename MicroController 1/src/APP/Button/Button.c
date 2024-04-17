@@ -121,13 +121,13 @@ void Button_task(void)
     UART_TX_frame = 0;
 
     HSwitch_Get_Status(Increment, &status);
-    UART_TX_frame |= (1 << Increment);
+    UART_TX_frame |= (status << Increment);
 
     HSwitch_Get_Status(Mode, &status);
-    UART_TX_frame |= (1 << Mode);
+    UART_TX_frame |= (status << Mode);
 
     HSwitch_Get_Status(Edit, &status);
-    UART_TX_frame |= (1 << Edit); 
+    UART_TX_frame |= (status << Edit); 
 
     /* Send the UART frame */
     HUSART_UserReq_t HUART_TxReq =
