@@ -53,7 +53,7 @@
  It implicitly make it static fri this file so the other files can't see it */
  const  HSwitch_Config_t HSwitchS[_HSwitch_Num] = {
    /*Ex : Set HSwitch1 Configuration*/
-    [Increament] = {
+    [Increment] = {
         .Pin = HSwitch_PIN0,
         .Port = HSwitch_PORTB,
         .Connection = HSwitch_INPUT_PL

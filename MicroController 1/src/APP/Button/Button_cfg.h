@@ -1,29 +1,25 @@
 /**
- * @file Scheduler_cfg.h
+ * @file Button_cfg.h
  * @author Ziad Gamalelden (ziad.gamalelden@gmail.com)
  * @brief 
  * @version 0.1
- * @date 2024-03-18
+ * @date 2024-04-16
  * 
  * @copyright Copyright (c) 2024
  * 
  */
-#ifndef SERVICES_SCHEDULER_SCHEDULER_CFG_H_
-#define SERVICES_SCHEDULER_SCHEDULER_CFG_H_
+#ifndef APP_BUTTON_BUTTON_CFG_H_
+#define APP_BUTTON_BUTTON_CFG_H_
 
 /********************************************************************************************************/
 /************************************************Includes************************************************/
 /********************************************************************************************************/
-#include "Scheduler.h"
+
 
 /********************************************************************************************************/
 /************************************************Defines*************************************************/
 /********************************************************************************************************/
-
-/**
- * @brief Time interval for the scheduler tick in milliseconds.
- */
-#define SCHED_TICK_TIMEMS 1
+#define BUTTON_PERIODIC_TIMEMS 100
 
 
 /********************************************************************************************************/
@@ -31,28 +27,22 @@
 /********************************************************************************************************/
 
 /**
- * @brief Enumeration of runnable task names.
- * 
- * This enumeration lists the names of all the runnable tasks that can be scheduled
- * by the scheduler. 
- * @note _NUM_OF_RUNNABLES is used for internal calculations and should not be modified,
+ * @brief Enumeration representing the IDs of different buttons.
  */
 typedef enum
 {
-    SCHED_DISPLAY_TASK,
-    SCHED_LCD_TASK,
-    SCHED_HUART_TASK,
-    SCHED_SWITCH_TASK,
-    SCHED_UPDATE_SWICH,
-    SCHED_DigitalWatch_Task,
-    SCHED_BUTTON_TASK,
-    _NUM_OF_RUNNABLES,    /**< Total number of runnables. Do not modify. */
-} Sched_Runnable_Name_t;
+    BUTTON_INCREMENT,        /**< Button for incrementing a value. */
+    BUTTON_MODE,             /**< Button for changing the mode. */
+    BUTTON_EDIT,             /**< Button for entering edit mode. */
+    _NUM_OF_BUTTONS,          /**< Number of buttons. */
+} Button_ID_t;
+
+
+
 
 /********************************************************************************************************/
 /************************************************APIs****************************************************/
 /********************************************************************************************************/
 
 
-
-#endif // SERVICES_SCHEDULER_SCHEDULER_CFG_H_
+#endif // APP_BUTTON_BUTTON_CFG_H_

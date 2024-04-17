@@ -21,6 +21,7 @@
 #include "HAL/LCD/LCD.h"
 #include "APP/Display/Display.h"
 #include "HAL/ControlClock/CLK_Control.h"
+#include "APP/Button/Button.h"
 /*******************************************************************************
  *                  	    Functions Prototypes                               *
  *******************************************************************************/

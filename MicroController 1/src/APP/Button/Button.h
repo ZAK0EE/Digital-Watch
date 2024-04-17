@@ -1,29 +1,25 @@
 /**
- * @file Scheduler_cfg.h
+ * @file Button.h
  * @author Ziad Gamalelden (ziad.gamalelden@gmail.com)
  * @brief 
  * @version 0.1
- * @date 2024-03-18
+ * @date 2024-04-16
  * 
  * @copyright Copyright (c) 2024
  * 
  */
-#ifndef SERVICES_SCHEDULER_SCHEDULER_CFG_H_
-#define SERVICES_SCHEDULER_SCHEDULER_CFG_H_
+#ifndef APP_BUTTON_BUTTON_H_
+#define APP_BUTTON_BUTTON_H_
 
 /********************************************************************************************************/
 /************************************************Includes************************************************/
 /********************************************************************************************************/
-#include "Scheduler.h"
-
+#include <stdint.h>
+#include "Button_cfg.h"
 /********************************************************************************************************/
 /************************************************Defines*************************************************/
 /********************************************************************************************************/
 
-/**
- * @brief Time interval for the scheduler tick in milliseconds.
- */
-#define SCHED_TICK_TIMEMS 1
 
 
 /********************************************************************************************************/
@@ -31,28 +27,86 @@
 /********************************************************************************************************/
 
 /**
- * @brief Enumeration of runnable task names.
- * 
- * This enumeration lists the names of all the runnable tasks that can be scheduled
- * by the scheduler. 
- * @note _NUM_OF_RUNNABLES is used for internal calculations and should not be modified,
+ * @brief Enumeration representing the state of a button (pressed or not pressed).
  */
 typedef enum
 {
-    SCHED_DISPLAY_TASK,
-    SCHED_LCD_TASK,
-    SCHED_HUART_TASK,
-    SCHED_SWITCH_TASK,
-    SCHED_UPDATE_SWICH,
-    SCHED_DigitalWatch_Task,
-    SCHED_BUTTON_TASK,
-    _NUM_OF_RUNNABLES,    /**< Total number of runnables. Do not modify. */
-} Sched_Runnable_Name_t;
+    BUTTON_IS_NOT_PRESSED, /**< Button is not pressed. */
+    BUTTON_IS_PRESSED      /**< Button is pressed. */
+} Button_state_t;
+
+/**
+ * @brief Enumeration representing the hold state of a button (held or not held).
+ */
+typedef enum
+{
+    BUTTON_IS_NOT_HELD, /**< Button is not held. */
+    BUTTON_IS_HELD      /**< Button is held. */
+} Button_holdState_t;
+
+/**
+ * @brief Enumeration representing the source of a button (GPIO or UART).
+ */
+typedef enum
+{
+    BUTTON_SOURCE_GPIO, /**< Button source is GPIO. */
+    BUTTON_SOURCE_UART  /**< Button source is UART. */
+} Button_source_t;
+
+
 
 /********************************************************************************************************/
 /************************************************APIs****************************************************/
 /********************************************************************************************************/
 
+/**
+ * @brief Initializes the buttons.
+ */
+void Button_init();
+
+/**
+ * @brief Checks if a button is currently pressed.
+ * 
+ * @param ButtonID The ID of the button to check.
+ * @return The state of the button (pressed or not).
+ */
+Button_state_t Button_isPressed(Button_ID_t ButtonID);
+
+/**
+ * @brief Checks if a button is pressed and held.
+ * 
+ * @param ButtonID The ID of the button to check.
+ * @return The hold state of the button (pressed and held or not).
+ */
+Button_holdState_t Button_isPressedAndHeld(Button_ID_t ButtonID);
+
+void Button_task(void);
 
 
-#endif // SERVICES_SCHEDULER_SCHEDULER_CFG_H_
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#endif // APP_BUTTON_BUTTON_H_
