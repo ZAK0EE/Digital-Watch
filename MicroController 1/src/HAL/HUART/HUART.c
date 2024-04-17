@@ -22,40 +22,19 @@
 /*******************************************************************************
  *                        	  Types Declaration                                 *
  *******************************************************************************/
-// typedef void (*Send_CBF_t)(void);
-// typedef void (*GetCBF_t)(void);
-
-typedef enum
-{
-    HUSART_ReqReady,
-    HUSART_ReqBusy
-} HUSART_UserRequestState;
-
-typedef enum
-{
-    HUSART_NoReq,
-    HUSART_Send,
-    HUSART_Get,
-    HUSART_HandleReq 
-} HUSART_UserRequestType;
-
 typedef struct
 {
     USART_UserReq_t BuffReqInfo;
-    HUSART_UserRequestState state;
-
 } HUSART_SendReq_t;
 typedef struct
 {
     USART_UserReq_t BuffReqInfo;
-    HUSART_UserRequestState state;
 } HUSART_GetReq_t;
 /*******************************************************************************
  *                              Variables                                       *
  *******************************************************************************/
 HUSART_SendReq_t SendReq[_USART_Num];
 HUSART_GetReq_t GetReq[_USART_Num];
-static HUSART_UserRequestType g_HUART_Type= HUSART_NoReq;
 extern const HUSART_PINConfig_t HUARTS[_USART_Num];
 extern uint8_t g_UART1_idx;
 extern uint8_t g_UART2_idx;
@@ -71,51 +50,6 @@ static uint8_t g_Index_Of_Receiving;
  *******************************************************************************/
 
 /****************************Processes Implementation************************************/
-/**
- * @brief    : Handles the UART tasks based on its current type.
- * @details  : This function checks the current type of UART operation and performs the corresponding actions.
- *             - If the UART type is HUSART_Send and there's a pending send request:
- *               - If the send request state is HUSART_ReqBusy, it initiates the asynchronous transmission of data.
- *               - Checks if the transmission is done using USART_TxDone function and updates the status accordingly.
- *             - If the UART type is HUSART_Get and there's a pending receive request:
- *               - If the receive request state is HUSART_ReqBusy, it initiates the asynchronous reception of data.
- *               - Checks if data reception is complete using USART_IsRx function and updates the status accordingly.
- *             - If the UART type is HUSART_NoReq, no action is taken.
- * @param    : None
- * @return   : None
- **/
-void HUART_Runnable(void)
-{
-    switch (g_HUART_Type)
-    {
-    case HUSART_HandleReq:
-        /* Checks if there's a pending send request */
-        if (SendReq[g_Index_Of_Sending].state == HUSART_ReqBusy)
-        {
-            /* Initiates asynchronous transmission of data */
-            USART_TxBufferAsyncZeroCopy(&(SendReq[g_Index_Of_Sending].BuffReqInfo));
-            SendReq[g_Index_Of_Sending].state = HUSART_ReqReady;
-            g_HUART_Type = HUSART_NoReq ;
-       }
-            /* Checks if there's a pending receive request */
-        //if (GetReq[g_Index_Of_Receiving].state == HUSART_ReqBusy)
-        {
-            /* Initiates asynchronous reception of data */
-            USART_RxBufferAsyncZeroCopy(&(GetReq[g_Index_Of_Receiving].BuffReqInfo));
-            GetReq[g_Index_Of_Receiving].state = HUSART_ReqReady; 
-            g_HUART_Type = HUSART_NoReq ;
-        }
-        break;       
-    case HUSART_NoReq:
-        /* No action is taken when the HUART is turned off */
-        /* Do Nothing */
-        break;
-        
-    default:
-        break;
-    }
-}
-
 /**
  * @brief    : Initializes the UART peripherals and associated GPIO pins.
  * @details  : This function initializes the UART peripherals and configures their associated GPIO pins for communication.
@@ -135,21 +69,21 @@ Error_enumStatus_t HUART_Init(void)
     GPIO_PinConfig_t UART_PINS[UART_PINS_NUM] = {
         [TX_ID] = {.PinMode = GPIO_MODE_ALTERNATE_PUSHPULL_NOPULL, .PinSpeed = GPIO_SPEED_HIGH},
         [RX_ID] = {.PinMode = GPIO_MODE_ALTERNATE_PUSHPULL_NOPULL, .PinSpeed = GPIO_SPEED_HIGH}};
-    
+
     /* Initialize GPIO pins for UART TX and RX */
     for (Loc_idx = 0; Loc_idx < _USART_Num; Loc_idx++)
     {
         UART_PINS[TX_ID].Port = HUARTS[Loc_idx].TX_PORT;
-        UART_PINS[TX_ID].PinNumber= HUARTS[Loc_idx].TX_PIN;
+        UART_PINS[TX_ID].PinNumber = HUARTS[Loc_idx].TX_PIN;
         UART_PINS[RX_ID].Port = HUARTS[Loc_idx].RX_PORT;
         UART_PINS[RX_ID].PinNumber = HUARTS[Loc_idx].RX_PIN;
-        
+
         GPIO_initPin(&UART_PINS[TX_ID]);
         GPIO_initPin(&UART_PINS[RX_ID]);
-        
+
         /* Configure GPIO alternate function for UART TX and RX */
-         GPIO_setPinAF(UART_PINS[TX_ID].Port, UART_PINS[TX_ID].PinNumber, HUARTS[Loc_idx].TX_AF_ID);
-         GPIO_setPinAF(UART_PINS[RX_ID].Port, UART_PINS[RX_ID].PinNumber, HUARTS[Loc_idx].TX_AF_ID);        
+        GPIO_setPinAF(UART_PINS[TX_ID].Port, UART_PINS[TX_ID].PinNumber, HUARTS[Loc_idx].TX_AF_ID);
+        GPIO_setPinAF(UART_PINS[RX_ID].Port, UART_PINS[RX_ID].PinNumber, HUARTS[Loc_idx].TX_AF_ID);
         /* Enable NVIC interrupts for UART communication */
         switch (HUARTS[Loc_idx].USART_ID)
         {
@@ -167,10 +101,10 @@ Error_enumStatus_t HUART_Init(void)
             break;
         }
     }
-    
+
     /* Initialize the UART peripherals */
     Loc_enumReturnStatus = USART_Init();
-    
+
     /* Return the status of the USART initialization */
     return Loc_enumReturnStatus;
 }
@@ -190,7 +124,7 @@ Error_enumStatus_t HUART_SendBuffAsync(HUSART_UserReq_t *Ptr_HUARTSendReq)
 {
     /* Local Variable to store error status */
     Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
-    
+
     /* Check if the pointer to the UART send request structure is valid */
     if (Ptr_HUARTSendReq == NULL)
     {
@@ -214,25 +148,23 @@ Error_enumStatus_t HUART_SendBuffAsync(HUSART_UserReq_t *Ptr_HUARTSendReq)
             break;
         }
         /* Check if the UART send request state is ready to send data */
-        if (SendReq[g_Index_Of_Sending].state == HUSART_ReqReady)
+        if (Loc_enumReturnStatus == Status_enumOk)
         {
-            SendReq[g_Index_Of_Sending].state = HUSART_ReqBusy;
             SendReq[g_Index_Of_Sending].BuffReqInfo.Ptr_buffer = Ptr_HUARTSendReq->Ptr_buffer;
             SendReq[g_Index_Of_Sending].BuffReqInfo.Buff_Len = Ptr_HUARTSendReq->Buff_Len;
             SendReq[g_Index_Of_Sending].BuffReqInfo.Buff_cb = Ptr_HUARTSendReq->Buff_cb;
             SendReq[g_Index_Of_Sending].BuffReqInfo.USART_ID = Ptr_HUARTSendReq->USART_ID;
-            g_HUART_Type = HUSART_HandleReq ;
+            USART_TxBufferAsyncZeroCopy(&(SendReq[g_Index_Of_Sending].BuffReqInfo));
         }
         else
         {
-            Loc_enumReturnStatus = Status_enumBusyState;
+            Loc_enumReturnStatus = Status_enumNotOk;
         }
     }
-    
+
     /* Return the status of the UART send operation initiation */
     return Loc_enumReturnStatus;
 }
-
 
 /**
  * @brief    : Initiates an asynchronous receive operation for UART communication.
@@ -248,27 +180,45 @@ Error_enumStatus_t HUART_ReceiveBuffAsync(HUSART_UserReq_t *Ptr_HUARTGetReq)
 {
     /* Local Variable to store error status */
     Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
-    
+
     /* Check if the pointer to the UART receive request structure is valid */
     if (Ptr_HUARTGetReq == NULL)
     {
         Loc_enumReturnStatus = Status_enumNULLPointer;
     }
-    /* Check if the UART receive request state is ready to receive data */
-    else if (GetReq[Ptr_HUARTGetReq->USART_ID].state == HUSART_ReqReady)
-    {
-        GetReq[g_Index_Of_Receiving].state = HUSART_ReqBusy;
-        GetReq[g_Index_Of_Receiving].BuffReqInfo.Ptr_buffer = Ptr_HUARTGetReq->Ptr_buffer;
-        GetReq[g_Index_Of_Receiving].BuffReqInfo.Buff_Len = Ptr_HUARTGetReq->Buff_Len;
-        GetReq[g_Index_Of_Receiving].BuffReqInfo.Buff_cb = Ptr_HUARTGetReq->Buff_cb;
-        GetReq[g_Index_Of_Receiving].BuffReqInfo.USART_ID = Ptr_HUARTGetReq->USART_ID;
-        g_HUART_Type = HUSART_HandleReq ;
-    }
     else
     {
-        Loc_enumReturnStatus = Status_enumBusyState;
-    }
+        switch (Ptr_HUARTGetReq->USART_ID)
+        {
+        case HUSART1_ID:
+            g_Index_Of_Receiving = g_UART1_idx;
+            break;
+        case HUSART2_ID:
+            g_Index_Of_Receiving = g_UART2_idx;
+            break;
+        case HUSART6_ID:
+            g_Index_Of_Receiving = g_UART6_idx;
+            break;
+        default:
+            Loc_enumReturnStatus = Status_enumNotOk;
+            break;
+        }
+        /* Check if the UART receive request state is ready to receive data */
+        if (Loc_enumReturnStatus == Status_enumOk)
+        {
+            GetReq[g_Index_Of_Receiving].BuffReqInfo.Ptr_buffer = Ptr_HUARTGetReq->Ptr_buffer;
+            GetReq[g_Index_Of_Receiving].BuffReqInfo.Buff_Len = Ptr_HUARTGetReq->Buff_Len;
+            GetReq[g_Index_Of_Receiving].BuffReqInfo.Buff_cb = Ptr_HUARTGetReq->Buff_cb;
+            GetReq[g_Index_Of_Receiving].BuffReqInfo.USART_ID = Ptr_HUARTGetReq->USART_ID;
+            USART_RxBufferAsyncZeroCopy(&(GetReq[g_Index_Of_Sending].BuffReqInfo));
+        }
+        else
+        {
+            Loc_enumReturnStatus = Status_enumNotOk;
+        }
 
-    /* Return the status of the UART receive operation initiation */
+        /* Return the status of the UART receive operation initiation */
+        
+    }
     return Loc_enumReturnStatus;
 }
