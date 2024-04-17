@@ -41,7 +41,6 @@ typedef enum
 {
     SCHED_DISPLAY_TASK,
     SCHED_LCD_TASK,
-    SCHED_HUART_TASK,
     SCHED_SWITCH_TASK,
     SCHED_UPDATE_SWICH,
     SCHED_DigitalWatch_Task,

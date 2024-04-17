@@ -35,7 +35,7 @@ extern void display_testa(void) ;
 extern void Stopwatch_test(void);
 extern void DW_Runnable(void) ;
 extern void HSwitch_Runnable(void);
-void Update_Switch_Runnable(void);
+extern void Update_Switch_Runnable(void);
 extern void Button_task(void);
 extern void HUART_Runnable(void);
 
@@ -90,10 +90,4 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
           .DelayMS = 40,
           .PeriodicityMS = 100,
      },
-     [SCHED_HUART_TASK]=
-     {
-               .CallBack = HUART_Runnable ,
-               .DelayMS = 50,
-               .PeriodicityMS = 50,
-     }
 };
