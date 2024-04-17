@@ -37,8 +37,17 @@ typedef struct
 {
     uint8_t row; /**< Row index of the cursor position. */
     uint8_t col; /**< Column index of the cursor position. */
-} CursorPos;
+} CursorPos_t;
 
+
+typedef struct 
+{
+    uint8_t isBlinking;
+    CursorPos_t charPos ;
+    uint8_t charBuffer;
+    uint32_t blinkRateMS;
+    int32_t blinkTimerMS;
+}BlinkChar_t;
 
 
 
@@ -46,8 +55,14 @@ typedef struct
 /************************************************Variables***********************************************/
 /********************************************************************************************************/
 static char frameBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
-static CursorPos currentCurPos = {.row = 0, .col = 0};
-
+static CursorPos_t currentCurPos = {.row = 0, .col = 0};
+static BlinkChar_t BlinkingChar = {
+    .isBlinking = 0,
+    .charPos = {0, 0},
+    .charBuffer = ' ',
+    .blinkRateMS = 500,
+    .blinkTimerMS = 0,
+}; 
 /********************************************************************************************************/
 /*****************************************Static Functions Prototype*************************************/
 /********************************************************************************************************/
@@ -64,7 +79,7 @@ void Display_task(void)
 {
     static uint8_t state = 0;
     static uint8_t frameIdx = 0;
-    static int8_t refreshTimerMS = DISPLAY_REFRESH_RATEMS;
+    static int32_t refreshTimerMS = DISPLAY_REFRESH_RATEMS;
     LCD_State_t LCD_state = 0; 
         switch(state)
         {
@@ -83,6 +98,24 @@ void Display_task(void)
             case 3:
                 if(refreshTimerMS <= 0)
                 {
+                    /* Handling blinking character*/
+                    if(BlinkingChar.isBlinking && BlinkingChar.charPos.row == frameIdx)
+                    {
+                        if(BlinkingChar.blinkTimerMS <= 0)
+                        {
+                            if(frameBuffer[frameIdx][BlinkingChar.charPos.col] != ' ')
+                            {
+                                frameBuffer[frameIdx][BlinkingChar.charPos.col] = ' ';                                
+                            }
+                            else
+                            {
+                                frameBuffer[frameIdx][BlinkingChar.charPos.col] = BlinkingChar.charBuffer;
+                            }
+                            BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
+
+                        }
+                    }
+
                     LCD_writeStringAsync(LCD1, frameBuffer[frameIdx], DISPLAY_WIDTH);
                     state++;
                 }
@@ -101,7 +134,7 @@ void Display_task(void)
                 state = 0;
                 break;
         }
-
+        BlinkingChar.blinkTimerMS -= DISPLAY_PERIODIC_CALLMS;
         refreshTimerMS -= DISPLAY_PERIODIC_CALLMS;
         
 }
@@ -172,4 +205,12 @@ void Display_clearScreenAsync(void)
     
     currentCurPos.row = 0;
     currentCurPos.col = 0;
+}
+
+void Display_blinkChar(uint8_t row, uint8_t col)
+{
+    BlinkingChar.isBlinking = 1;
+    BlinkingChar.charPos = (CursorPos_t){row, col};
+    BlinkingChar.charBuffer = frameBuffer[row][col];
+    
 }

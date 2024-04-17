@@ -76,5 +76,12 @@ void Display_setCursorAsync(uint8_t row, uint8_t column);
  */
 void Display_clearScreenAsync(void);
 
+/**
+ * @brief Blinks the character at the specified row and column on the display.
+ * 
+ * @param row The row of the character to blink.
+ * @param col The column of the character to blink.
+ */
+void Display_blinkChar(uint8_t row, uint8_t col);
 
 #endif // APP_DISPLAY_DISPLAY_H_
