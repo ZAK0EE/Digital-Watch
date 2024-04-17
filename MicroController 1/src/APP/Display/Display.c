@@ -43,6 +43,7 @@ typedef struct
 typedef struct 
 {
     uint8_t isBlinking;
+    uint8_t isAppear;
     CursorPos_t charPos ;
     uint8_t charBuffer;
     uint32_t blinkRateMS;
@@ -102,14 +103,18 @@ void Display_task(void)
                     if(BlinkingChar.isBlinking && BlinkingChar.charPos.row == frameIdx)
                     {
                         /* Making sure we got the right character*/
-                        if(frameBuffer[frameIdx][BlinkingChar.charPos.col] != ' ' && frameBuffer[frameIdx][BlinkingChar.charPos.col] != BlinkingChar.charBuffer)
+                        if((!BlinkingChar.isAppear && frameBuffer[frameIdx][BlinkingChar.charPos.col] != ' ')
+                            || (BlinkingChar.isAppear && frameBuffer[frameIdx][BlinkingChar.charPos.col] != BlinkingChar.charBuffer))
                         {
                             BlinkingChar.charBuffer = frameBuffer[frameIdx][BlinkingChar.charPos.col];
+                            
+                            if(!BlinkingChar.isAppear)
+                                frameBuffer[frameIdx][BlinkingChar.charPos.col] = ' ';
                         }
 
                         if(BlinkingChar.blinkTimerMS <= 0)
                         {
-                            if(frameBuffer[frameIdx][BlinkingChar.charPos.col] != ' ')
+                            if(BlinkingChar.isAppear)
                             {
                                 frameBuffer[frameIdx][BlinkingChar.charPos.col] = ' ';                                
                             }
@@ -117,6 +122,7 @@ void Display_task(void)
                             {
                                 frameBuffer[frameIdx][BlinkingChar.charPos.col] = BlinkingChar.charBuffer;
                             }
+                            BlinkingChar.isAppear = !BlinkingChar.isAppear;
                             BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
 
                         }
@@ -224,5 +230,6 @@ void Display_blinkChar(uint8_t row, uint8_t col)
     BlinkingChar.isBlinking = 1;
     BlinkingChar.charPos = (CursorPos_t){row, col};
     BlinkingChar.charBuffer = frameBuffer[row][col];
+    BlinkingChar.isAppear = 0;
     
 }
