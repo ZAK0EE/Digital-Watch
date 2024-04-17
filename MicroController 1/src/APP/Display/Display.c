@@ -101,6 +101,12 @@ void Display_task(void)
                     /* Handling blinking character*/
                     if(BlinkingChar.isBlinking && BlinkingChar.charPos.row == frameIdx)
                     {
+                        /* Making sure we got the right character*/
+                        if(frameBuffer[frameIdx][BlinkingChar.charPos.col] != ' ' && frameBuffer[frameIdx][BlinkingChar.charPos.col] != BlinkingChar.charBuffer)
+                        {
+                            BlinkingChar.charBuffer = frameBuffer[frameIdx][BlinkingChar.charPos.col];
+                        }
+
                         if(BlinkingChar.blinkTimerMS <= 0)
                         {
                             if(frameBuffer[frameIdx][BlinkingChar.charPos.col] != ' ')
