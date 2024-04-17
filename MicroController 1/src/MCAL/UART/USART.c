@@ -618,6 +618,7 @@ void USART1_IRQHandler(void)
             if (RxReq[g_UART1_idx].buffer.Pos == RxReq[g_UART1_idx].buffer.size)
             {
                 RxReq[g_UART1_idx].state = USART_ReqReady;
+                RxReq[g_UART1_idx].buffer.Pos =0 ;
                 /* Disable RXE interrupt */
                 //((USART_PERI_t *)USART[g_UART1_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
                 /* Call callback function if available */
