@@ -18,12 +18,8 @@
 /********************************************************************************************************/
 
 typedef enum{
-    SWITCH_getState_5MS,
-    GetSwitchState_50MS,
-    TrafficLights_1000MS,
-    /*ToggleRedLED_250MS,
-    ToggleGreenLED_500MS,
-    ToggleYellowLED_1000MS,*/
+    HSwtich,
+    ReadSwitch,
     
     _NUM_OF_RUNNABLES
 }Sched_runnablesNames_t;
