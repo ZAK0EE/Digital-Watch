@@ -204,7 +204,7 @@ static void DW_Clock_Modes(void)
         Display_setCursorAsync(1, 0);
         len = sprintf(buff, "%.2d/%.2d/%.4d", (int)Time->month, (int)Time->day, (int)Time->year);
         Display_printCenteredAsync(buff, len);
-        Display_blinkChar(1, 13);
+        Display_stopBlinkChar();
         /* Switch to edit mode if the edit switch is pressed */
         if (Edit_switch_status == BUTTON_IS_PRESSED)
         {
