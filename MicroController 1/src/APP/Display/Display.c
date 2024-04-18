@@ -104,7 +104,7 @@ void Display_task(void)
                 if(refreshTimerMS <= 0)
                 {
                     /* Handling blinking logic */
-                    if(BlinkingChar.isBlinking && BlinkingChar.charPos.row == frameIdx &&BlinkingChar.blinkTimerMS <= 0)
+                    if(BlinkingChar.isBlinking &&BlinkingChar.blinkTimerMS <= 0)
                     {
                         if(BlinkingChar.isAppear)
                         {
