@@ -233,7 +233,7 @@ void Display_blinkChar(uint8_t row, uint8_t col)
         BlinkingChar.charPos = (CursorPos_t){row, col};
         BlinkingChar.charBuffer = frameBuffer[row][col];
         BlinkingChar.isAppear = 0;
-        BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
+        BlinkingChar.blinkTimerMS = 0;
     }
     if(BlinkingChar.isBlinking == 1)
     {
@@ -246,7 +246,7 @@ void Display_blinkChar(uint8_t row, uint8_t col)
             BlinkingChar.charPos = (CursorPos_t){row, col};
             BlinkingChar.charBuffer = frameBuffer[row][col];
             BlinkingChar.isAppear = 0;
-            BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
+            BlinkingChar.blinkTimerMS = 0;
 
         }
     }
