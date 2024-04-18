@@ -13,26 +13,26 @@
 #include "APP/Clock/Clock_Date.h"
 #include "APP/StopWatch/StopWatch.h"
 #include "APP/Display/Display.h"
+#include "APP/Button/Button.h"
 #include <stdio.h>
 /*******************************************************************************
  *                                Definitions                                  *
  *******************************************************************************/
-#define DW_ENTER_EDIT       0
-#define DW_HR_SEC_DIG       1
-#define DW_HR_FST_DIG       2
-#define DW_MIN_SEC_DIG      3
-#define DW_MIN_FST_DIG      4
-#define DW_SEC_SEC_DIG      5
-#define DW_SEC_FST_DIG      6
-#define DW_YEAR_FTH_DIG     7
-#define DW_YEAR_THR_DIG     8
-#define DW_YEAR_SEC_DIG     9
-#define DW_YEAR_FST_DIG     10
-#define DW_MONTH_SEC_DIG    11
-#define DW_MONTH_FST_DIG    12
-#define DW_DAY_SEC_DIG      13
-#define DW_DAY_FST_DIG      14
-
+#define DW_ENTER_EDIT 0
+#define DW_HR_SEC_DIG 1
+#define DW_HR_FST_DIG 2
+#define DW_MIN_SEC_DIG 3
+#define DW_MIN_FST_DIG 4
+#define DW_SEC_SEC_DIG 5
+#define DW_SEC_FST_DIG 6
+#define DW_YEAR_FTH_DIG 7
+#define DW_YEAR_THR_DIG 8
+#define DW_YEAR_SEC_DIG 9
+#define DW_YEAR_FST_DIG 10
+#define DW_MONTH_SEC_DIG 11
+#define DW_MONTH_FST_DIG 12
+#define DW_DAY_SEC_DIG 13
+#define DW_DAY_FST_DIG 14
 
 /*******************************************************************************
  *                        	  Types Declaration                                 *
@@ -40,7 +40,8 @@
 typedef enum
 {
     DW_Mode_Clock,
-    DW_Mode_StopWatch
+    DW_Mode_StopWatch,
+    DW_Mode_Reset
 } DW_Mode;
 typedef enum
 {
@@ -66,6 +67,8 @@ static DW_StopWatchModes Current_StopWatch_Mode = DW_Mode_StopWatch_Show;
 uint8_t Edit_switch_status = 0;
 uint8_t Inc_switch_status = 0;
 uint8_t Mode_switch_status = 0;
+uint8_t Edit_held_status = 0;
+uint8_t Mode_held_status = 0;
 /*******************************************************************************
  *                         Static Function Prototypes		                   *
  *******************************************************************************/
@@ -81,17 +84,17 @@ static void DW_StopWatch_Modes(void);
  * @param    : None
  * @return   : None
  **/
-void Update_Switch_Runnable(void)
-{
-    /* Get status of the increment switch */
-    HSwitch_Get_Status(Increment, &Inc_switch_status);
-    
-    /* Get status of the mode switch */
-    HSwitch_Get_Status(Mode, &Mode_switch_status);
-    
-    /* Get status of the edit switch */
-    HSwitch_Get_Status(Edit, &Edit_switch_status);
-}
+// void Update_Switch_Runnable(void)
+// {
+//     /* Get status of the increment switch */
+//     HSwitch_Get_Status(Increment, &Inc_switch_status);
+
+//     /* Get status of the mode switch */
+//     HSwitch_Get_Status(Mode, &Mode_switch_status);
+
+//     /* Get status of the edit switch */
+//     HSwitch_Get_Status(Edit, &Edit_switch_status);
+// }
 
 /**
  * @brief    : Main runnable function for the Date and Time display.
@@ -103,32 +106,66 @@ void Update_Switch_Runnable(void)
  **/
 void DW_Runnable(void)
 {
+    Inc_switch_status = Button_isPressed(Increment);
+    Mode_switch_status = Button_isPressed(Mode);
+    Edit_switch_status = Button_isPressed(Edit);
+    Mode_held_status = Button_isPressedAndHeld(Mode);
+    Edit_held_status = Button_isPressedAndHeld(Edit);
+    /* Get status of the increment switch */
+    // HSwitch_Get_Status(Increment, &Inc_switch_status);
+
+    // /* Get status of the mode switch */
+    // HSwitch_Get_Status(Mode, &Mode_switch_status);
+
+    // /* Get status of the edit switch */
+    // HSwitch_Get_Status(Edit, &Edit_switch_status);
+
     switch (Current_Operation_Mode)
     {
     case DW_Mode_Clock:
         /* Execute clock display modes */
         DW_Clock_Modes();
-        
+
         /* Switch to stopwatch mode if the mode switch is pressed */
-        if ((Current_Clock_Mode != DW_Mode_Clock_Edit) && (Mode_switch_status == HSwitch_PRESSED))
+        if ((Current_Clock_Mode != DW_Mode_Clock_Edit) && (Mode_switch_status == BUTTON_IS_PRESSED))
         {
             Current_Operation_Mode = DW_Mode_StopWatch;
             Display_clearScreenAsync();
         }
+        if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
+        {
+            Current_Operation_Mode = DW_Mode_Reset;
+            Display_clearScreenAsync();
+        }
         break;
-        
+
     case DW_Mode_StopWatch:
         /* Execute stopwatch display modes */
         DW_StopWatch_Modes();
-        
+
         /* Switch to clock mode if the mode switch is pressed */
-        if ((Mode_switch_status == HSwitch_PRESSED))
+        if ((Mode_switch_status == BUTTON_IS_PRESSED))
         {
             Current_Operation_Mode = DW_Mode_Clock;
             Display_clearScreenAsync();
         }
+        if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
+        {
+            Current_Operation_Mode = DW_Mode_Reset;
+            Display_clearScreenAsync();
+        }
         break;
-        
+    case DW_Mode_Reset:
+        Clock_SetHours(0);
+        Clock_SetMinutes(0);
+        Clock_SetSeconds(0);
+        Clock_SetDays(1);
+        Clock_SetMonths(1);
+        Clock_SetYears(2000);
+        StopWatch_reset();
+        Current_Operation_Mode = DW_Mode_Clock;
+        break;
+
     default:
         break;
     }
@@ -146,18 +183,18 @@ static void DW_Clock_Modes(void)
     /* Pointer to hold the current time information */
     const TimeInfo_t *Time;
     Time = Clock_CalculateCurrentTime();
-    
+
     /* Buffer to store formatted time strings */
     char buff[30] = {'0', '0'};
     int len;
     uint16_t Inc_Amount = 0;
-    
+
     /* Static variable to keep track of the current position in edit mode */
     static uint8_t current_posstion = DW_ENTER_EDIT;
-    
+
     /* Set the cursor to the beginning of the display */
     Display_setCursorAsync(0, 0);
-    
+
     switch (Current_Clock_Mode)
     {
     case DW_Mode_Clock_Show:
@@ -165,83 +202,98 @@ static void DW_Clock_Modes(void)
         len = sprintf(buff, "%.2d:%.2d:%.2d:%d", (int)Time->hour, (int)Time->minute, (int)Time->second, (int)Time->secondMS);
         Display_printCenteredAsync(buff, len);
         Display_setCursorAsync(1, 0);
-        len = sprintf(buff, "%.4d/%.2d/%.2d", (int)Time->year, (int)Time->month, (int)Time->day);
+        len = sprintf(buff, "%.2d/%.2d/%.4d", (int)Time->month, (int)Time->day, (int)Time->year);
         Display_printCenteredAsync(buff, len);
-        
+        Display_blinkChar(1, 13);
         /* Switch to edit mode if the edit switch is pressed */
-        if (Edit_switch_status == HSwitch_PRESSED)
+        if (Edit_switch_status == BUTTON_IS_PRESSED)
         {
             Current_Clock_Mode = DW_Mode_Clock_Edit;
         }
         break;
-        
+
     case DW_Mode_Clock_Edit:
         /* Display the current time in edit mode */
         len = sprintf(buff, "%.2d:%.2d:%.2d:%d", (int)Time->hour, (int)Time->minute, (int)Time->second, (int)Time->secondMS);
         Display_printCenteredAsync(buff, len);
         Display_setCursorAsync(1, 0);
-        len = sprintf(buff, "%.4d/%.2d/%.2d", (int)Time->year, (int)Time->month, (int)Time->day);
+        len = sprintf(buff, "%.2d/%.2d/%.4d", (int)Time->month, (int)Time->day, (int)Time->year);
+
         Display_printCenteredAsync(buff, len);
         Display_setCursorAsync(0, current_posstion);
-        
+
         /* Handle increment switch press to edit time components */
-        if (Inc_switch_status == HSwitch_PRESSED)
+        if (Inc_switch_status == BUTTON_IS_PRESSED)
         {
             switch (current_posstion)
             {
             case DW_HR_SEC_DIG:
+                Display_blinkChar(0, 3);
                 Inc_Amount = 10;
                 Clock_SetHours(Time->hour + (uint8_t)Inc_Amount);
                 break;
             case DW_HR_FST_DIG:
+                Display_blinkChar(0, 4);
                 Inc_Amount = 1;
                 Clock_SetHours(Time->hour + (uint8_t)Inc_Amount);
                 break;
             case DW_MIN_SEC_DIG:
+                Display_blinkChar(0, 6);
                 Inc_Amount = 10;
                 Clock_SetMinutes(Time->minute + (uint8_t)Inc_Amount);
                 break;
             case DW_MIN_FST_DIG:
+                Display_blinkChar(0, 7);
                 Inc_Amount = 1;
                 Clock_SetMinutes(Time->minute + (uint8_t)Inc_Amount);
                 break;
             case DW_SEC_SEC_DIG:
+                Display_blinkChar(0, 9);
                 Inc_Amount = 10;
                 Clock_SetSeconds(Time->second + (uint8_t)Inc_Amount);
                 break;
             case DW_SEC_FST_DIG:
+                Display_blinkChar(0, 10);
                 Inc_Amount = 1;
                 Clock_SetSeconds(Time->second + (uint8_t)Inc_Amount);
                 break;
             case DW_YEAR_FTH_DIG:
+                Display_blinkChar(1, 3);
                 Inc_Amount = 1000;
                 Clock_SetYears(Time->year + Inc_Amount);
                 break;
             case DW_YEAR_THR_DIG:
+                Display_blinkChar(1, 4);
                 Inc_Amount = 100;
                 Clock_SetYears(Time->year + (uint8_t)Inc_Amount);
                 break;
             case DW_YEAR_SEC_DIG:
+                Display_blinkChar(1, 5);
                 Inc_Amount = 10;
                 Clock_SetYears(Time->year + (uint8_t)Inc_Amount);
                 break;
             case DW_YEAR_FST_DIG:
+                Display_blinkChar(1, 6);
                 Inc_Amount = 1;
                 Clock_SetYears(Time->year + (uint8_t)Inc_Amount);
                 break;
             case DW_MONTH_SEC_DIG:
+                Display_blinkChar(1, 8);
                 Inc_Amount = 10;
                 Clock_SetMonths(Time->month + (uint8_t)Inc_Amount);
                 break;
             case DW_MONTH_FST_DIG:
+                Display_blinkChar(1, 9);
                 Inc_Amount = 1;
                 Clock_SetMonths(Time->month + (uint8_t)Inc_Amount);
                 break;
             case DW_DAY_SEC_DIG:
+                Display_blinkChar(1, 11);
                 Inc_Amount = 10;
                 Clock_SetDays(Time->day + (uint8_t)Inc_Amount);
                 break;
             case DW_DAY_FST_DIG:
+                Display_blinkChar(1, 12);
                 Inc_Amount = 1;
                 Clock_SetDays(Time->day + (uint8_t)Inc_Amount);
                 break;
@@ -250,26 +302,26 @@ static void DW_Clock_Modes(void)
                 break;
             }
         }
-        
+
         /* Switch back to show mode if mode switch is pressed */
-        if (Mode_switch_status == HSwitch_PRESSED)
+        if (Mode_switch_status == BUTTON_IS_PRESSED)
         {
             Current_Clock_Mode = DW_Mode_Clock_Show;
         }
-        
+
         /* Move to the next digit in edit mode if edit switch is pressed */
-        if (Edit_switch_status == HSwitch_PRESSED)
+        if (Edit_switch_status == BUTTON_IS_PRESSED)
         {
             Current_Clock_Mode = DW_Mode_Clock_Edit_Next_Dig;
         }
         break;
-        
+
     case DW_Mode_Clock_Edit_Next_Dig:
         /* Move to the next digit in edit mode */
         current_posstion++;
         Current_Clock_Mode = DW_Mode_Clock_Edit;
         break;
-        
+
     default:
         break;
     }
@@ -286,13 +338,13 @@ static void DW_StopWatch_Modes(void)
 {
     /* Static variable to keep track of the current stopwatch mode */
     static DW_StopWatchModes StopWatch_Start_Stop = DW_Mode_StopWatch_Operation;
-    
+
     /* Buffer to store formatted stopwatch time string */
     char buff[30] = {0};
-    
+
     /* Pointer to hold the current stopwatch time information */
     const StopWatch_time_t *stopWatchTime = StopWatch_getCurrentTime();
-    
+
     /* Format the stopwatch time string */
     int len = sprintf(buff, "%.2d:%.2d:%.2d:%.2d", (int)(stopWatchTime->hours), (int)(stopWatchTime->minutes), (int)(stopWatchTime->seconds), (int)(stopWatchTime->secondsMS / 10));
     buff[len] = 0;
@@ -302,22 +354,22 @@ static void DW_StopWatch_Modes(void)
     case DW_Mode_StopWatch_Show:
         /* Display the stopwatch time */
         Display_printCenteredAsync(buff, len);
-        
+
         /* Switch to operation mode if edit switch is pressed */
-        if (Edit_switch_status == HSwitch_PRESSED)
+        if (Edit_switch_status == BUTTON_IS_PRESSED)
         {
             Current_StopWatch_Mode = DW_Mode_StopWatch_Operation;
             StopWatch_Start_Stop++;
         }
-        
+
         /* Reset stopwatch if increment switch is pressed */
-        if (Inc_switch_status == HSwitch_PRESSED)
+        if (Inc_switch_status == BUTTON_IS_PRESSED)
         {
             Current_StopWatch_Mode = DW_Mode_StopWatch_Reset;
             StopWatch_Start_Stop = DW_Mode_StopWatch_Operation;
         }
         break;
-        
+
     case DW_Mode_StopWatch_Operation:
         /* Handle stopwatch operation based on current state */
         switch (StopWatch_Start_Stop)
@@ -339,15 +391,14 @@ static void DW_StopWatch_Modes(void)
             break;
         }
         break;
-        
+
     case DW_Mode_StopWatch_Reset:
         /* Reset the stopwatch and switch back to show mode */
         StopWatch_reset();
         Current_StopWatch_Mode = DW_Mode_StopWatch_Show;
         break;
-        
+
     default:
         break;
     }
 }
- 
