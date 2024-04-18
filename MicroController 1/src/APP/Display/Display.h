@@ -84,4 +84,9 @@ void Display_clearScreenAsync(void);
  */
 void Display_blinkChar(uint8_t row, uint8_t col);
 
+/**
+ * @brief Stop blinking the character.
+*/
+void Display_stopBlinkChar(void);
+
 #endif // APP_DISPLAY_DISPLAY_H_

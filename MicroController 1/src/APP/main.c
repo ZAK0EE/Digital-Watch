@@ -9,7 +9,7 @@ int main(void)
 {
     InitSys();
 
-    Display_blinkChar(0, 3);
+    //Display_blinkChar(0, 3);
     Sched_init();
     Sched_start();
 }
