@@ -221,8 +221,10 @@ void Display_clearScreenAsync(void)
 
 void Display_blinkChar(uint8_t row, uint8_t col)
 {
-    /* Restore last blinking character*/
-    if(BlinkingChar.isBlinking == 1)
+    /* Restore last blinking character only if it's in different place*/
+    if((BlinkingChar.isBlinking == 1) && 
+        (BlinkingChar.charPos.col != col || BlinkingChar.charPos.row != row)
+    )
     {
         frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = BlinkingChar.charBuffer;
     }
@@ -232,4 +234,13 @@ void Display_blinkChar(uint8_t row, uint8_t col)
     BlinkingChar.charBuffer = frameBuffer[row][col];
     BlinkingChar.isAppear = 0;
     
+}
+
+void Display_stopBlinkChar(void)
+{
+    BlinkingChar.isBlinking = 0;
+
+    /* Restore character if still not appear */
+    if(!BlinkingChar.isAppear)
+        frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = BlinkingChar.charBuffer;
 }

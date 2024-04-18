@@ -8,6 +8,8 @@ void assert_failed(void)
 int main(void)
 {
     InitSys();
+
+    Display_blinkChar(0, 3);
     Sched_init();
     Sched_start();
 }
