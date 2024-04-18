@@ -61,7 +61,7 @@ static BlinkChar_t BlinkingChar = {
     .isBlinking = 0,
     .charPos = {0, 0},
     .charBuffer = 0,
-    .blinkRateMS = 250,
+    .blinkRateMS = 300,
     .blinkTimerMS = 0,
 }; 
 /********************************************************************************************************/
