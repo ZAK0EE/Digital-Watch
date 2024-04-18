@@ -18,21 +18,6 @@
 /*******************************************************************************
  *                                Definitions                                  *
  *******************************************************************************/
-#define DW_ENTER_EDIT 0
-#define DW_HR_SEC_DIG 1
-#define DW_HR_FST_DIG 2
-#define DW_MIN_SEC_DIG 3
-#define DW_MIN_FST_DIG 4
-#define DW_SEC_SEC_DIG 5
-#define DW_SEC_FST_DIG 6
-#define DW_YEAR_FTH_DIG 7
-#define DW_YEAR_THR_DIG 8
-#define DW_YEAR_SEC_DIG 9
-#define DW_YEAR_FST_DIG 10
-#define DW_MONTH_SEC_DIG 11
-#define DW_MONTH_FST_DIG 12
-#define DW_DAY_SEC_DIG 13
-#define DW_DAY_FST_DIG 14
 
 /*******************************************************************************
  *                        	  Types Declaration                                 *
@@ -58,6 +43,25 @@ typedef enum
     DW_Mode_StopWatch_Resume,
     DW_Mode_StopWatch_Reset
 } DW_StopWatchModes;
+typedef enum
+{
+    DW_ENTER_EDIT,
+    DW_HR_SEC_DIG,
+    DW_HR_FST_DIG,
+    DW_MIN_SEC_DIG,
+    DW_MIN_FST_DIG,
+    DW_SEC_SEC_DIG,
+    DW_SEC_FST_DIG,
+    DW_DAY_FST_DIG,
+    DW_DAY_SEC_DIG,
+    DW_MONTH_FST_DIG,
+    DW_MONTH_SEC_DIG,
+    DW_YEAR_FST_DIG,
+    DW_YEAR_SEC_DIG,
+    DW_YEAR_THR_DIG,
+    DW_YEAR_FTH_DIG,
+    _DW_DIGIT_NUM
+} DW_EditMode;
 /*******************************************************************************
  *                        	     Variables                                      *
  *******************************************************************************/
@@ -69,6 +73,7 @@ uint8_t Inc_switch_status = 0;
 uint8_t Mode_switch_status = 0;
 uint8_t Edit_held_status = 0;
 uint8_t Mode_held_status = 0;
+static const uint8_t DigitCol[_DW_DIGIT_NUM] = {0, 3, 4, 6, 7, 9, 10, 3, 4, 6, 7, 9, 10, 11, 12};
 /*******************************************************************************
  *                         Static Function Prototypes		                   *
  *******************************************************************************/
@@ -183,18 +188,15 @@ static void DW_Clock_Modes(void)
     /* Pointer to hold the current time information */
     const TimeInfo_t *Time;
     Time = Clock_CalculateCurrentTime();
-
     /* Buffer to store formatted time strings */
     char buff[30] = {'0', '0'};
     int len;
+    int current_row = 0 ;
     uint16_t Inc_Amount = 0;
-
     /* Static variable to keep track of the current position in edit mode */
-    static uint8_t current_posstion = DW_ENTER_EDIT;
-
+    static DW_EditMode current_posstion = DW_ENTER_EDIT;
     /* Set the cursor to the beginning of the display */
     Display_setCursorAsync(0, 0);
-
     switch (Current_Clock_Mode)
     {
     case DW_Mode_Clock_Show:
@@ -202,98 +204,81 @@ static void DW_Clock_Modes(void)
         len = sprintf(buff, "%.2d:%.2d:%.2d:%d", (int)Time->hour, (int)Time->minute, (int)Time->second, (int)Time->secondMS);
         Display_printCenteredAsync(buff, len);
         Display_setCursorAsync(1, 0);
-        len = sprintf(buff, "%.2d/%.2d/%.4d", (int)Time->month, (int)Time->day, (int)Time->year);
+        len = sprintf(buff, "%.2d/%.2d/%.4d", (int)Time->day, (int)Time->month, (int)Time->year);
         Display_printCenteredAsync(buff, len);
-        Display_stopBlinkChar();
         /* Switch to edit mode if the edit switch is pressed */
         if (Edit_switch_status == BUTTON_IS_PRESSED)
         {
             Current_Clock_Mode = DW_Mode_Clock_Edit;
         }
         break;
-
     case DW_Mode_Clock_Edit:
         /* Display the current time in edit mode */
         len = sprintf(buff, "%.2d:%.2d:%.2d:%d", (int)Time->hour, (int)Time->minute, (int)Time->second, (int)Time->secondMS);
         Display_printCenteredAsync(buff, len);
         Display_setCursorAsync(1, 0);
-        len = sprintf(buff, "%.2d/%.2d/%.4d", (int)Time->month, (int)Time->day, (int)Time->year);
-
+        len = sprintf(buff, "%.2d/%.2d/%.4d", (int)Time->day, (int)Time->month, (int)Time->year);
         Display_printCenteredAsync(buff, len);
-        Display_setCursorAsync(0, current_posstion);
-
+        current_row =  (current_posstion / (DW_SEC_FST_DIG+1)) < 1 ? (current_posstion / (DW_SEC_FST_DIG+1)) : 1;
+        Display_blinkChar(current_row, DigitCol[current_posstion]);
         /* Handle increment switch press to edit time components */
         if (Inc_switch_status == BUTTON_IS_PRESSED)
         {
             switch (current_posstion)
             {
             case DW_HR_SEC_DIG:
-                Display_blinkChar(0, 3);
                 Inc_Amount = 10;
                 Clock_SetHours(Time->hour + (uint8_t)Inc_Amount);
                 break;
             case DW_HR_FST_DIG:
-                Display_blinkChar(0, 4);
                 Inc_Amount = 1;
                 Clock_SetHours(Time->hour + (uint8_t)Inc_Amount);
                 break;
             case DW_MIN_SEC_DIG:
-                Display_blinkChar(0, 6);
                 Inc_Amount = 10;
                 Clock_SetMinutes(Time->minute + (uint8_t)Inc_Amount);
                 break;
             case DW_MIN_FST_DIG:
-                Display_blinkChar(0, 7);
                 Inc_Amount = 1;
                 Clock_SetMinutes(Time->minute + (uint8_t)Inc_Amount);
                 break;
             case DW_SEC_SEC_DIG:
-                Display_blinkChar(0, 9);
                 Inc_Amount = 10;
                 Clock_SetSeconds(Time->second + (uint8_t)Inc_Amount);
                 break;
             case DW_SEC_FST_DIG:
-                Display_blinkChar(0, 10);
                 Inc_Amount = 1;
                 Clock_SetSeconds(Time->second + (uint8_t)Inc_Amount);
                 break;
-            case DW_YEAR_FTH_DIG:
-                Display_blinkChar(1, 3);
+            case DW_YEAR_FST_DIG :
                 Inc_Amount = 1000;
                 Clock_SetYears(Time->year + Inc_Amount);
                 break;
-            case DW_YEAR_THR_DIG:
-                Display_blinkChar(1, 4);
+            case DW_YEAR_SEC_DIG :
                 Inc_Amount = 100;
                 Clock_SetYears(Time->year + (uint8_t)Inc_Amount);
                 break;
-            case DW_YEAR_SEC_DIG:
-                Display_blinkChar(1, 5);
+            case DW_YEAR_THR_DIG :
                 Inc_Amount = 10;
                 Clock_SetYears(Time->year + (uint8_t)Inc_Amount);
                 break;
-            case DW_YEAR_FST_DIG:
-                Display_blinkChar(1, 6);
+            case DW_YEAR_FTH_DIG:
                 Inc_Amount = 1;
                 Clock_SetYears(Time->year + (uint8_t)Inc_Amount);
-                break;
-            case DW_MONTH_SEC_DIG:
-                Display_blinkChar(1, 8);
-                Inc_Amount = 10;
-                Clock_SetMonths(Time->month + (uint8_t)Inc_Amount);
                 break;
             case DW_MONTH_FST_DIG:
-                Display_blinkChar(1, 9);
+                Inc_Amount = 10;
+                Clock_SetMonths(Time->month + (uint8_t)Inc_Amount);
+                break;
+            case DW_MONTH_SEC_DIG :
                 Inc_Amount = 1;
                 Clock_SetMonths(Time->month + (uint8_t)Inc_Amount);
                 break;
-            case DW_DAY_SEC_DIG:
-                Display_blinkChar(1, 11);
+            case DW_DAY_FST_DIG :
                 Inc_Amount = 10;
                 Clock_SetDays(Time->day + (uint8_t)Inc_Amount);
                 break;
-            case DW_DAY_FST_DIG:
-                Display_blinkChar(1, 12);
+            case DW_DAY_SEC_DIG:
                 Inc_Amount = 1;
                 Clock_SetDays(Time->day + (uint8_t)Inc_Amount);
                 break;
@@ -307,6 +292,7 @@ static void DW_Clock_Modes(void)
         if (Mode_switch_status == BUTTON_IS_PRESSED)
         {
             Current_Clock_Mode = DW_Mode_Clock_Show;
+            Display_stopBlinkChar();
         }
 
         /* Move to the next digit in edit mode if edit switch is pressed */
@@ -319,6 +305,10 @@ static void DW_Clock_Modes(void)
     case DW_Mode_Clock_Edit_Next_Dig:
         /* Move to the next digit in edit mode */
         current_posstion++;
+        if (current_posstion >= _DW_DIGIT_NUM)
+        {
+            current_posstion = DW_HR_SEC_DIG;
+        }
         Current_Clock_Mode = DW_Mode_Clock_Edit;
         break;
 
