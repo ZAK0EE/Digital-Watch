@@ -111,19 +111,19 @@ static void DW_StopWatch_Modes(void);
  **/
 void DW_Runnable(void)
 {
-    // Inc_switch_status = Button_isPressed(Increment);
-    // Mode_switch_status = Button_isPressed(Mode);
-    // Edit_switch_status = Button_isPressed(Edit);
-    // Mode_held_status = Button_isPressedAndHeld(Mode);
-    // Edit_held_status = Button_isPressedAndHeld(Edit);
+    Inc_switch_status = Button_isPressed(Increment);
+    Mode_switch_status = Button_isPressed(Mode);
+    Edit_switch_status = Button_isPressed(Edit);
+    Mode_held_status = Button_isPressedAndHeld(Mode);
+    Edit_held_status = Button_isPressedAndHeld(Edit);
     /* Get status of the increment switch */
-    HSwitch_Get_Status(Increment, &Inc_switch_status);
+    // HSwitch_Get_Status(Increment, &Inc_switch_status);
 
-    /* Get status of the mode switch */
-    HSwitch_Get_Status(Mode, &Mode_switch_status);
+    // /* Get status of the mode switch */
+    // HSwitch_Get_Status(Mode, &Mode_switch_status);
 
-    /* Get status of the edit switch */
-    HSwitch_Get_Status(Edit, &Edit_switch_status);
+    // /* Get status of the edit switch */
+    // HSwitch_Get_Status(Edit, &Edit_switch_status);
 
     switch (Current_Operation_Mode)
     {
@@ -206,7 +206,6 @@ static void DW_Clock_Modes(void)
         Display_setCursorAsync(1, 0);
         len = sprintf(buff, "%.2d/%.2d/%.4d", (int)Time->day, (int)Time->month, (int)Time->year);
         Display_printCenteredAsync(buff, len);
-        Display_stopBlinkChar();
         /* Switch to edit mode if the edit switch is pressed */
         if (Edit_switch_status == BUTTON_IS_PRESSED)
         {
