@@ -233,3 +233,8 @@ void Display_blinkChar(uint8_t row, uint8_t col)
     BlinkingChar.isAppear = 0;
     
 }
+
+void Display_stopBlinkChar(void)
+{
+    BlinkingChar.isBlinking = 0;
+}
