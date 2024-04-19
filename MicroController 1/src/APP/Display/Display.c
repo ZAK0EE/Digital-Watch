@@ -61,9 +61,7 @@ static char LCDBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
 static CursorPos_t currentCurPos = {.row = 0, .col = 0};
 static BlinkChar_t BlinkingChar = {
     .isBlinking = 0,
-    .isAppear = 0,
     .charPos = {0, 0},
-    .charBuffer = 0,
     .blinkRateMS = 100,
     .blinkTimerMS = 300,
 }; 
@@ -84,16 +82,13 @@ void Display_task(void)
 {
     static uint8_t state = 0;
     static uint8_t frameIdx = 0;
-    static int32_t LCDWriteTimerMS = LCD_WRITE_TIMERMS;
-
+    LCD_State_t LCDState = 0;
 
 
     switch(state)
     {
         case 0:
-            LCDWriteTimerMS -= DISPLAY_PERIODIC_CALLMS;
-
-            if(LCDWriteTimerMS <= 0)
+            if(LCD_getState(LCD1) == LCD_STATE_READY)
             {
                 /* Takes 2MS */
                 LCD_setCursorPositionAsync(LCD1, frameIdx, 0);
@@ -120,15 +115,11 @@ void Display_task(void)
                     }
                 } 
 
-
                 /* Takes 32MS */                
                 LCD_writeStringAsync(LCD1, LCDBuffer[frameIdx], DISPLAY_WIDTH);
         
                 state = 0;
-                LCDWriteTimerMS = LCD_WRITE_TIMERMS;
                 frameIdx++;
-
-
                 if(frameIdx >= DISPLAY_HEIGHT)
                 {
                     frameIdx = 0;
