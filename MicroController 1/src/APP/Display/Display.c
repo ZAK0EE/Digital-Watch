@@ -75,15 +75,12 @@ static BlinkChar_t BlinkingChar = {
 /*********************************************APIs Implementation****************************************/
 /********************************************************************************************************/
 
-    static int32_t refreshTimerMS = DISPLAY_REFRESH_RATEMS;
 
-#define LCD_WRITE_TIMERMS 35
 void Display_task(void)
 {
     static uint8_t state = 0;
     static uint8_t frameIdx = 0;
-    LCD_State_t LCDState = 0;
-
+    static int32_t refreshTimerMS = DISPLAY_REFRESH_RATEMS;
 
     switch(state)
     {
