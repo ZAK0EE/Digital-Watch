@@ -130,35 +130,41 @@ void DW_Runnable(void)
     case DW_Mode_Clock:
         /* Execute clock display modes */
         DW_Clock_Modes();
-
+        if ( (Mode_switch_status == BUTTON_IS_PRESSED && Edit_switch_status == BUTTON_IS_PRESSED))
+        {
         /* Switch to stopwatch mode if the mode switch is pressed */
-        if ((Current_Clock_Mode != DW_Mode_Clock_Edit) && (Mode_switch_status == BUTTON_IS_PRESSED))
+            if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
+            {
+                Current_Operation_Mode = DW_Mode_Reset;
+            }
+        }
+        else if ((Current_Clock_Mode != DW_Mode_Clock_Edit) && (Mode_switch_status == BUTTON_IS_PRESSED))
         {
             Current_Operation_Mode = DW_Mode_StopWatch;
             Display_clearScreenAsync();
         }
-        if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
-        {
-            Current_Operation_Mode = DW_Mode_Reset;
-            Display_clearScreenAsync();
-        }
+        else {}
         break;
-
     case DW_Mode_StopWatch:
         /* Execute stopwatch display modes */
         DW_StopWatch_Modes();
 
         /* Switch to clock mode if the mode switch is pressed */
-        if ((Mode_switch_status == BUTTON_IS_PRESSED))
+        if ( (Mode_switch_status == BUTTON_IS_PRESSED && Edit_switch_status == BUTTON_IS_PRESSED))
+        {
+        /* Switch to stopwatch mode if the mode switch is pressed */
+            if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
+            {
+                Current_Operation_Mode = DW_Mode_Reset;
+            }
+        }
+        else if  ((Mode_switch_status == BUTTON_IS_PRESSED))
         {
             Current_Operation_Mode = DW_Mode_Clock;
             Display_clearScreenAsync();
         }
-        if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
-        {
-            Current_Operation_Mode = DW_Mode_Reset;
-            Display_clearScreenAsync();
-        }
+        else
+        {}
         break;
     case DW_Mode_Reset:
         Clock_SetHours(0);
@@ -168,6 +174,8 @@ void DW_Runnable(void)
         Clock_SetMonths(1);
         Clock_SetYears(2000);
         StopWatch_reset();
+        StopWatch_pause();
+        Display_clearScreenAsync();
         Current_Operation_Mode = DW_Mode_Clock;
         break;
 
