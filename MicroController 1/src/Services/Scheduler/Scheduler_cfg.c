@@ -50,33 +50,30 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
           .PeriodicityMS = 1000,
      },    
      */
+     [SCHED_DigitalWatch_Task]=
+     {
+          .CallBack = DW_Runnable,
+          .DelayMS = 100,
+          .PeriodicityMS = 100,
+     },    
      [SCHED_LCD_TASK]=
      {
           .CallBack = LCD_task,
           .DelayMS = 0,
           .PeriodicityMS = 1,
      },
-
      [SCHED_DISPLAY_TASK]=
      {
           .CallBack = Display_task,
           .DelayMS = 20,
           .PeriodicityMS = 5,
      },
-
      [SCHED_SWITCH_TASK]=
      {
           .CallBack = HSwitch_Runnable,
           .DelayMS = 40,
           .PeriodicityMS = 5,
      },
-     [SCHED_DigitalWatch_Task]=
-     {
-          .CallBack = DW_Runnable,
-          .DelayMS = 100,
-          .PeriodicityMS = 100,
-     },
-
      [SCHED_BUTTON_TASK]=
      {
           .CallBack = Button_task,
