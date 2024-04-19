@@ -45,7 +45,6 @@ typedef enum
 } DW_StopWatchModes;
 typedef enum
 {
-    DW_ENTER_EDIT,
     DW_HR_SEC_DIG,
     DW_HR_FST_DIG,
     DW_MIN_SEC_DIG,
@@ -73,7 +72,7 @@ uint8_t Inc_switch_status = 0;
 uint8_t Mode_switch_status = 0;
 uint8_t Edit_held_status = 0;
 uint8_t Mode_held_status = 0;
-static const uint8_t DigitCol[_DW_DIGIT_NUM] = {0, 3, 4, 6, 7, 9, 10, 3, 4, 6, 7, 9, 10, 11, 12};
+static const uint8_t DigitCol[_DW_DIGIT_NUM] = {3, 4, 6, 7, 9, 10, 3, 4, 6, 7, 9, 10, 11, 12};
 /*******************************************************************************
  *                         Static Function Prototypes		                   *
  *******************************************************************************/
@@ -202,7 +201,7 @@ static void DW_Clock_Modes(void)
     int current_row = 0 ;
     uint16_t Inc_Amount = 0;
     /* Static variable to keep track of the current position in edit mode */
-    static DW_EditMode current_posstion = DW_ENTER_EDIT;
+    static DW_EditMode current_posstion = DW_HR_SEC_DIG;
     /* Set the cursor to the beginning of the display */
     Display_setCursorAsync(0, 0);
     switch (Current_Clock_Mode)

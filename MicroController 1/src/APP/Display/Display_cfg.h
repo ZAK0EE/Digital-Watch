@@ -30,7 +30,7 @@
 /**
  * @brief Time interval in milliseconds between periodic calls to the display task.
  */
-#define DISPLAY_PERIODIC_CALLMS 1
+#define DISPLAY_PERIODIC_CALLMS 5
 
 /**
  * @brief Time interval in milliseconds between display refresh cycles.

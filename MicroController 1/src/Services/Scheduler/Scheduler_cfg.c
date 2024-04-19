@@ -61,7 +61,7 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
      {
           .CallBack = Display_task,
           .DelayMS = 20,
-          .PeriodicityMS = 1,
+          .PeriodicityMS = 5,
      },
 
      [SCHED_SWITCH_TASK]=

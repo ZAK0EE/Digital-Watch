@@ -56,13 +56,14 @@ typedef struct
 /************************************************Variables***********************************************/
 /********************************************************************************************************/
 static char frameBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
+static char LCDBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
+
 static CursorPos_t currentCurPos = {.row = 0, .col = 0};
 static BlinkChar_t BlinkingChar = {
     .isBlinking = 0,
     .charPos = {0, 0},
-    .charBuffer = 0,
-    .blinkRateMS = 250,
-    .blinkTimerMS = 0,
+    .blinkRateMS = 500,
+    .blinkTimerMS = 500,
 }; 
 /********************************************************************************************************/
 /*****************************************Static Functions Prototype*************************************/
@@ -75,68 +76,64 @@ static BlinkChar_t BlinkingChar = {
 /********************************************************************************************************/
 
 
-
 void Display_task(void)
 {
     static uint8_t state = 0;
     static uint8_t frameIdx = 0;
     static int32_t refreshTimerMS = DISPLAY_REFRESH_RATEMS;
 
-    LCD_State_t LCD_state = 0; 
-
-
-
-        switch(state)
-        {
-            case 0:
-                LCD_state = LCD_getState(LCD1);
-                if(LCD_state == LCD_STATE_READY) state++;
-                break;
-            case 1:
+    switch(state)
+    {
+        case 0:
+            if(LCD_getState(LCD1) == LCD_STATE_READY)
+            {
+                /* Takes 2MS */
                 LCD_setCursorPositionAsync(LCD1, frameIdx, 0);
                 state++;
-                break;
-            case 2:
-                LCD_state = LCD_getState(LCD1);
-                if(LCD_state == LCD_STATE_READY) state++;         
-                break;       
-            case 3:
-                if(refreshTimerMS <= 0)
+            }
+            break;       
+        case 1:
+            if(refreshTimerMS <= 0)
+            {
+                if(frameIdx == 0)
                 {
-                    /* Handling blinking logic */
-                    if(BlinkingChar.isBlinking && BlinkingChar.charPos.row == frameIdx &&BlinkingChar.blinkTimerMS <= 0)
-                    {
-                        if(BlinkingChar.isAppear)
-                        {
-                            frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = ' ';                                
-                        }
-                        else
-                        {
-                            frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = BlinkingChar.charBuffer;
-                        }
-                        BlinkingChar.isAppear = !BlinkingChar.isAppear;
-                        BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
-                    }                        
-                    LCD_writeStringAsync(LCD1, frameBuffer[frameIdx], DISPLAY_WIDTH);
-                    state++;
+                    strncpy(LCDBuffer[0], frameBuffer[0], DISPLAY_WIDTH);
+                    strncpy(LCDBuffer[1], frameBuffer[1], DISPLAY_WIDTH);
                 }
-                break;
-            case 4:
-                LCD_state = LCD_getState(LCD1);
-                if(LCD_state == LCD_STATE_READY) state++;         
-                break;                
-            case 5:
+
+                /* Handling blinking logic */
+                if(BlinkingChar.isBlinking && BlinkingChar.blinkTimerMS <= 0)
+                {
+                    if(!BlinkingChar.isAppear)
+                    {
+                        LCDBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = ' ';                                
+                    }
+                    else
+                    {
+                        LCDBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col];
+                    }
+                    
+                    BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
+                } 
+
+                /* Takes 32MS */                
+                LCD_writeStringAsync(LCD1, LCDBuffer[frameIdx], DISPLAY_WIDTH);
+        
+                state = 0;
                 frameIdx++;
                 if(frameIdx >= DISPLAY_HEIGHT)
                 {
                     frameIdx = 0;
                     refreshTimerMS = DISPLAY_REFRESH_RATEMS;
+                    BlinkingChar.isAppear = !BlinkingChar.isAppear;
+
                 }
-                state = 0;
-                break;
-        }
-        BlinkingChar.blinkTimerMS -= DISPLAY_PERIODIC_CALLMS;
-        refreshTimerMS -= DISPLAY_PERIODIC_CALLMS;
+                break;                
+            }         
+
+    }
+    BlinkingChar.blinkTimerMS -= DISPLAY_PERIODIC_CALLMS;
+    refreshTimerMS -= DISPLAY_PERIODIC_CALLMS;
         
 }
 
@@ -165,15 +162,6 @@ void Display_printAsync(char *buffer, uint8_t len)
 
     strncpy(&frameBuffer[row][col], buffer, cpyLen);
 
-    /* Update blinking buffer */
-    if(BlinkingChar.isBlinking && BlinkingChar.charPos.row == row &&
-        BlinkingChar.charPos.col >= col && BlinkingChar.charPos.col <= (col + cpyLen - 1))
-    {
-        BlinkingChar.charBuffer = frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col];
-    }
-
-
-
     currentCurPos.col += cpyLen;
 }
 
@@ -188,15 +176,8 @@ void Display_printCenteredAsync(char *buffer, uint8_t len)
     /* Truncation to prevent over rendering */
     uint8_t cpyLen = MIN(len, DISPLAY_WIDTH - centerPos);
 
-    /* Copying the content to the frame buffer */
     strncpy(&frameBuffer[row][currentCurPos.col], buffer, cpyLen);
 
-    /* Update blinking buffer */
-    if(BlinkingChar.isBlinking && BlinkingChar.charPos.row == row &&
-        (BlinkingChar.charPos.col >= currentCurPos.col && BlinkingChar.charPos.col <= (currentCurPos.col + cpyLen - 1)))
-    {
-        BlinkingChar.charBuffer = frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col];
-    }    
     currentCurPos.col += cpyLen;
 
 }
@@ -226,37 +207,11 @@ void Display_clearScreenAsync(void)
 
 void Display_blinkChar(uint8_t row, uint8_t col)
 {
-    
-    if(BlinkingChar.isBlinking == 0)
-    {
-        BlinkingChar.isBlinking = 1;
-        BlinkingChar.charPos = (CursorPos_t){row, col};
-        BlinkingChar.charBuffer = frameBuffer[row][col];
-        BlinkingChar.isAppear = 0;
-        BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
-    }
-    if(BlinkingChar.isBlinking == 1)
-    {
-        /* if blinking occurs in different place, else do nothing */
-        if(BlinkingChar.charPos.col != col || BlinkingChar.charPos.row != row)
-        {
-            /* Restore last blinking character */
-            frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = BlinkingChar.charBuffer;
-
-            BlinkingChar.charPos = (CursorPos_t){row, col};
-            BlinkingChar.charBuffer = frameBuffer[row][col];
-            BlinkingChar.isAppear = 0;
-            BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
-
-        }
-    }
-
-    
+    BlinkingChar.isBlinking = 1;
+    BlinkingChar.charPos = (CursorPos_t){row, col};
 }
 
 void Display_stopBlinkChar(void)
 {
     BlinkingChar.isBlinking = 0;
-    if(!BlinkingChar.isAppear)
-        frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = BlinkingChar.charBuffer;
 }
