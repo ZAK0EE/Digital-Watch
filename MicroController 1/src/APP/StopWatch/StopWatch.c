@@ -48,6 +48,7 @@ uint8_t isStopWatchRunning = 0;
 
 void StopWatch_start(void)
 {
+    StopWatch_reset();
     isStopWatchRunning = 1;
     startTickCount = Sched_getTickCount();
 }
