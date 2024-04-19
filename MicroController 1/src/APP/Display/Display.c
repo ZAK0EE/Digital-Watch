@@ -62,8 +62,8 @@ static CursorPos_t currentCurPos = {.row = 0, .col = 0};
 static BlinkChar_t BlinkingChar = {
     .isBlinking = 0,
     .charPos = {0, 0},
-    .blinkRateMS = 100,
-    .blinkTimerMS = 300,
+    .blinkRateMS = 500,
+    .blinkTimerMS = 500,
 }; 
 /********************************************************************************************************/
 /*****************************************Static Functions Prototype*************************************/
@@ -89,15 +89,17 @@ void Display_task(void)
             {
                 /* Takes 2MS */
                 LCD_setCursorPositionAsync(LCD1, frameIdx, 0);
-                
                 state++;
             }
             break;       
         case 1:
             if(refreshTimerMS <= 0)
             {
-
-                strncpy(LCDBuffer[frameIdx], frameBuffer[frameIdx], DISPLAY_WIDTH);           
+                if(frameIdx == 0)
+                {
+                    strncpy(LCDBuffer[0], frameBuffer[0], DISPLAY_WIDTH);
+                    strncpy(LCDBuffer[1], frameBuffer[1], DISPLAY_WIDTH);
+                }
 
                 /* Handling blinking logic */
                 if(BlinkingChar.isBlinking && BlinkingChar.blinkTimerMS <= 0)
@@ -110,6 +112,8 @@ void Display_task(void)
                     {
                         LCDBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col];
                     }
+                    
+                    BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
                 } 
 
                 /* Takes 32MS */                
@@ -121,7 +125,6 @@ void Display_task(void)
                 {
                     frameIdx = 0;
                     refreshTimerMS = DISPLAY_REFRESH_RATEMS;
-                    BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
                     BlinkingChar.isAppear = !BlinkingChar.isAppear;
 
                 }
