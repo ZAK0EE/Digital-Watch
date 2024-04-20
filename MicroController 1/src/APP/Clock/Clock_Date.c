@@ -189,6 +189,13 @@ void Clock_SetMonths(uint8_t months)
     }
     else
     {
+         // Check if the current day exceeds the maximum days in the new month
+        uint8_t max_days_in_new_month = days_in_month[months - 1];
+        if (Time.day > max_days_in_new_month)
+        {
+            // Reset the day to 1 if it exceeds the maximum days in the new month
+            Time.day = 1;
+        }
         Time.month = months;
     }
 }
