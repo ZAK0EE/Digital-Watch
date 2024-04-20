@@ -9,6 +9,8 @@
 /*******************************************************************************
  *                                Includes	                                  *
  *******************************************************************************/
+#include "Services/Scheduler/Scheduler.h"
+#include "Services/Scheduler/Scheduler_cfg.h"
 #include "APP/Clock/Clock_Date.h"
 /*******************************************************************************
  *                        	  Types Declaration                                 *
@@ -105,7 +107,7 @@ const TimeInfo_t *Clock_CalculateCurrentTime(void)
 
 /**
  * @brief    : Sets the seconds value in the time structure.
- * @param[in]: seconds: The value to set for seconds.
+ * @param[in]: seconds: The value to set for seconds from 0 to 59.
  * @return   : None
  **/
 void Clock_SetSeconds(uint8_t seconds)
@@ -122,7 +124,7 @@ void Clock_SetSeconds(uint8_t seconds)
 
 /**
  * @brief    : Sets the minutes value in the time structure.
- * @param[in]: minutes: The value to set for minutes.
+ * @param[in]: minutes: The value to set for minutes from 0 to 59.
  * @return   : None
  **/
 void Clock_SetMinutes(uint8_t minutes)
@@ -139,7 +141,7 @@ void Clock_SetMinutes(uint8_t minutes)
 
 /**
  * @brief    : Sets the hours value in the time structure.
- * @param[in]: hours: The value to set for hours.
+ * @param[in]: hours: The value to set for hours from 0 to 23.
  * @return   : None
  **/
 void Clock_SetHours(uint8_t hours)
@@ -156,8 +158,9 @@ void Clock_SetHours(uint8_t hours)
 
 /**
  * @brief    : Sets the days value in the time structure.
- * @param[in]: days: The value to set for days.
+ * @param[in]: days: The value to set for days from to 31 , 30 , 29 , 28 according to months number .
  * @return   : None
+ * @details : This function checks if the days exceed the maximum days in the current month and adjusts them accordingly.
  **/
 void Clock_SetDays(uint8_t days)
 {
@@ -178,7 +181,7 @@ void Clock_SetDays(uint8_t days)
 
 /**
  * @brief    : Sets the months value in the time structure.
- * @param[in]: months: The value to set for months.
+ * @param[in]: months: The value to set for months from 1 to 12.
  * @return   : None
  **/
 void Clock_SetMonths(uint8_t months)
@@ -191,6 +194,10 @@ void Clock_SetMonths(uint8_t months)
     {
          // Check if the current day exceeds the maximum days in the new month
         uint8_t max_days_in_new_month = days_in_month[months - 1];
+        if (Time.month == 2 && ((Time.year % 4 == 0 && Time.year % 100 != 0) || Time.year % 400 == 0))
+        {
+            max_days_in_new_month = 29 ;
+        }
         if (Time.day > max_days_in_new_month)
         {
             // Reset the day to 1 if it exceeds the maximum days in the new month
@@ -202,7 +209,7 @@ void Clock_SetMonths(uint8_t months)
 
 /**
  * @brief    : Sets the years value in the time structure.
- * @param[in]: years: The value to set for years.
+ * @param[in]: years: The value to set for years from 2000 to 9999.
  * @return   : None
  **/
 void Clock_SetYears(uint16_t years)

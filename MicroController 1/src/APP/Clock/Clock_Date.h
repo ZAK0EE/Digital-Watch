@@ -17,8 +17,6 @@
 #include "LIB/std_types.h"
 #include "LIB/Mask32.h"
 #include "LIB/Error.h"
-#include "Services/Scheduler/Scheduler.h"
-#include "Services/Scheduler/Scheduler_cfg.h"
 /*******************************************************************************
  *                                Definitions                                  *
  *******************************************************************************/
