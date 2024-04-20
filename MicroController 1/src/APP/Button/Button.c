@@ -80,7 +80,8 @@ void Button_init()
 
 Button_state_t Button_isPressed(Button_ID_t ButtonID)
 {
-    return Button_status[ButtonID].CurrentRead;
+    Button_state_t state = Button_status[ButtonID].CurrentRead == BUTTON_IS_PRESSED && Button_status[ButtonID].LastRead == BUTTON_IS_NOT_PRESSED;
+    return state;
 }
 Button_holdState_t Button_isPressedAndHeld(Button_ID_t ButtonID)
 {
@@ -92,6 +93,10 @@ void Button_task(void)
     Button_ID_t ID = 0;
     for(ID = 0; ID < _NUM_OF_BUTTONS; ID++)
     {
+        Button_status[ID].LastRead = Button_status[ID].CurrentRead;
+        
+        HSwitch_Get_Status(ID, &Button_status[ID].CurrentRead);
+
         /* Check if button was pressed last time */
         if(Button_status[ID].CurrentRead == BUTTON_IS_PRESSED && Button_status[ID].LastRead == BUTTON_IS_PRESSED)
         {
@@ -112,30 +117,30 @@ void Button_task(void)
             Button_status[ID].IsHeld = BUTTON_IS_NOT_HELD;
         }
 
-        Button_status[ID].LastRead = Button_status[ID].CurrentRead;
+        
     }
 
     
-    /* Encode Buttons reads */
-    uint8_t status = 0;
-    UART_TX_frame = 0;
+    // /* Encode Buttons reads */
+    // uint8_t status = 0;
+    // UART_TX_frame = 0;
 
-    HSwitch_Get_Status(Increment, &status);
-    UART_TX_frame |= (status << Increment);
+    // HSwitch_Get_Status(Increment, &status);
+    // UART_TX_frame |= (status << Increment);
 
-    HSwitch_Get_Status(Mode, &status);
-    UART_TX_frame |= (status<< Mode);
+    // HSwitch_Get_Status(Mode, &status);
+    // UART_TX_frame |= (status<< Mode);
 
-    HSwitch_Get_Status(Edit, &status);
-    UART_TX_frame |= (status << Edit); 
+    // HSwitch_Get_Status(Edit, &status);
+    // UART_TX_frame |= (status << Edit); 
 
-    /* Send the UART frame */
-    HUSART_UserReq_t HUART_TxReq =
-    {
-        .USART_ID = USART1_ID,
-        .Ptr_buffer= &UART_TX_frame,
-        .Buff_Len = 1,
-        .Buff_cb = 0,
-    };
-    HUART_SendBuffAsync(&HUART_TxReq);
+    // /* Send the UART frame */
+    // HUSART_UserReq_t HUART_TxReq =
+    // {
+    //     .USART_ID = USART1_ID,
+    //     .Ptr_buffer= &UART_TX_frame,
+    //     .Buff_Len = 1,
+    //     .Buff_cb = 0,
+    // };
+    // HUART_SendBuffAsync(&HUART_TxReq);
 }
