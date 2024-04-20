@@ -121,26 +121,26 @@ void Button_task(void)
     }
 
     
-    /* Encode Buttons reads */
-    uint8_t status = 0;
-    UART_TX_frame = 0;
+    // /* Encode Buttons reads */
+    // uint8_t status = 0;
+    // UART_TX_frame = 0;
 
-    HSwitch_Get_Status(Increment, &status);
-    UART_TX_frame |= (status << Increment);
+    // HSwitch_Get_Status(Increment, &status);
+    // UART_TX_frame |= (status << Increment);
 
-    HSwitch_Get_Status(Mode, &status);
-    UART_TX_frame |= (status<< Mode);
+    // HSwitch_Get_Status(Mode, &status);
+    // UART_TX_frame |= (status<< Mode);
 
-    HSwitch_Get_Status(Edit, &status);
-    UART_TX_frame |= (status << Edit); 
+    // HSwitch_Get_Status(Edit, &status);
+    // UART_TX_frame |= (status << Edit); 
 
-    /* Send the UART frame */
-    HUSART_UserReq_t HUART_TxReq =
-    {
-        .USART_ID = USART1_ID,
-        .Ptr_buffer= &UART_TX_frame,
-        .Buff_Len = 1,
-        .Buff_cb = 0,
-    };
-    HUART_SendBuffAsync(&HUART_TxReq);
+    // /* Send the UART frame */
+    // HUSART_UserReq_t HUART_TxReq =
+    // {
+    //     .USART_ID = USART1_ID,
+    //     .Ptr_buffer= &UART_TX_frame,
+    //     .Buff_Len = 1,
+    //     .Buff_cb = 0,
+    // };
+    // HUART_SendBuffAsync(&HUART_TxReq);
 }

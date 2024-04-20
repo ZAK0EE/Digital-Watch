@@ -99,22 +99,25 @@ void Display_task(void)
                 {
                     strncpy(LCDBuffer[0], frameBuffer[0], DISPLAY_WIDTH);
                     strncpy(LCDBuffer[1], frameBuffer[1], DISPLAY_WIDTH);
+                    
+                    /* Handling blinking logic */
+                    if(BlinkingChar.isBlinking && BlinkingChar.blinkTimerMS <= 0)
+                    {
+                        if(!BlinkingChar.isAppear)
+                        {
+                            LCDBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = ' ';                                
+                        }
+                        else
+                        {
+                            LCDBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col];
+                        }
+                        BlinkingChar.isAppear = !BlinkingChar.isAppear;
+                        BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
+                        
+                    }                     
                 }
 
-                /* Handling blinking logic */
-                if(BlinkingChar.isBlinking && BlinkingChar.blinkTimerMS <= 0)
-                {
-                    if(!BlinkingChar.isAppear)
-                    {
-                        LCDBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = ' ';                                
-                    }
-                    else
-                    {
-                        LCDBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col] = frameBuffer[BlinkingChar.charPos.row][BlinkingChar.charPos.col];
-                    }
-                    
-                    BlinkingChar.blinkTimerMS = BlinkingChar.blinkRateMS;
-                } 
+
 
                 /* Takes 32MS */                
                 LCD_writeStringAsync(LCD1, LCDBuffer[frameIdx], DISPLAY_WIDTH);
@@ -125,7 +128,7 @@ void Display_task(void)
                 {
                     frameIdx = 0;
                     refreshTimerMS = DISPLAY_REFRESH_RATEMS;
-                    BlinkingChar.isAppear = !BlinkingChar.isAppear;
+
 
                 }
                 break;                
