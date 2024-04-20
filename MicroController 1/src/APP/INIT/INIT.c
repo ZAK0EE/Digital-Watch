@@ -9,6 +9,14 @@
 /*******************************************************************************
  *                                Includes	                                  *
  *******************************************************************************/
+#include "Services/Scheduler/Scheduler.h"
+#include "Services/Scheduler/Scheduler_cfg.h"
+#include "HAL/HUART/HUART.h"
+#include "HAL/HSwitch/HSwitch.h"
+#include "HAL/LCD/LCD.h"
+#include "APP/Display/Display.h"
+#include "HAL/ControlClock/CLK_Control.h"
+#include "APP/Button/Button.h"
 #include "APP/INIT/INIT.h"
 /*******************************************************************************
  *                             Implementation   				                *
