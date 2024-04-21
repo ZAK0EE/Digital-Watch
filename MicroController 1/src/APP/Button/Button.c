@@ -35,11 +35,27 @@ typedef struct
 }
 Button_status_t;
 
+typedef enum
+{
+    UARTMSG_INC_BUTTON_IS_PRESSED = 0x10,
+    UARTMSG_MODE_BUTTON_IS_PRESSED =  0x20,
+    UARTMSG_EDIT_BUTTON_IS_PRESSED =  0x30,
+    UARTMSG_MODE_EDIT_BUTTON_IS_HELD =  0x40,
+}Button_UART_MSG_t;
+
+typedef enum
+{
+    BUTTONUART_INCREMENT = 3,        /**< Button for incrementing a value. */
+    BUTTONUART_MODE,             /**< Button for changing the mode. */
+    BUTTONUART_EDIT,             /**< Button for entering edit mode. */
+    _NUM_OF_BUTTONSUART,          /**< Number of buttons. */
+} ButtonUART_ID_t;
 
 /********************************************************************************************************/
 /************************************************Variables***********************************************/
 /********************************************************************************************************/
-static Button_status_t Button_status[_NUM_OF_BUTTONS] = {0};
+static Button_status_t Button_status[_NUM_OF_BUTTONS + (_NUM_OF_BUTTONSUART - _NUM_OF_BUTTONS)] = {0};
+
 static uint8_t UART_TX_frame = 0;
 static uint8_t UART_RX_frame = 0;
 
@@ -54,11 +70,23 @@ void on_UART_Receive(void);
 
 void on_UART_Receive(void)
 {
-    Button_ID_t ID = 0;
-    for(ID = 0; ID < _NUM_OF_BUTTONS; ID++)
+    if(UART_RX_frame == UARTMSG_INC_BUTTON_IS_PRESSED)
     {
-        Button_status[ID].CurrentRead = (UART_RX_frame >> ID & 1);
+        Button_status[Increment].CurrentRead = BUTTON_IS_PRESSED;
     }
+    else if(UART_RX_frame == UARTMSG_EDIT_BUTTON_IS_PRESSED)
+    {
+        Button_status[Edit].CurrentRead = BUTTON_IS_PRESSED;
+    }   
+    else if(UART_RX_frame == UARTMSG_MODE_BUTTON_IS_PRESSED)
+    {
+        Button_status[Mode].CurrentRead = BUTTON_IS_PRESSED;
+    }    
+    else if(UART_RX_frame == UARTMSG_MODE_EDIT_BUTTON_IS_HELD)
+    {
+        Button_status[Edit].IsHeld = BUTTON_IS_HELD;
+        Button_status[Mode].IsHeld = BUTTON_IS_HELD;
+    }  
 
 }
 
@@ -72,7 +100,6 @@ void Button_init()
         .Buff_Len = 1,
         .Buff_cb = on_UART_Receive,
     };
-
     
     HUART_ReceiveBuffAsync(&HUART_RxReq);
 
@@ -80,7 +107,14 @@ void Button_init()
 
 Button_state_t Button_isPressed(Button_ID_t ButtonID)
 {
-    Button_state_t state = Button_status[ButtonID].CurrentRead == BUTTON_IS_PRESSED && Button_status[ButtonID].LastRead == BUTTON_IS_NOT_PRESSED;
+    Button_state_t state = 3; 
+    if(ButtonID < _NUM_OF_BUTTONS)
+    {
+        state = Button_status[ButtonID].CurrentRead;
+        Button_status[ButtonID].CurrentRead = BUTTON_IS_NOT_PRESSED;
+    }
+    else
+        state = Button_status[ButtonID].CurrentRead == BUTTON_IS_PRESSED && Button_status[ButtonID].LastRead == BUTTON_IS_NOT_PRESSED;
     return state;
 }
 Button_holdState_t Button_isPressedAndHeld(Button_ID_t ButtonID)
@@ -90,12 +124,12 @@ Button_holdState_t Button_isPressedAndHeld(Button_ID_t ButtonID)
 
 void Button_task(void)
 {
-    Button_ID_t ID = 0;
-    for(ID = 0; ID < _NUM_OF_BUTTONS; ID++)
+    ButtonUART_ID_t ID = BUTTONUART_INCREMENT;
+    for(; ID < _NUM_OF_BUTTONSUART; ID++)
     {
         Button_status[ID].LastRead = Button_status[ID].CurrentRead;
         
-        HSwitch_Get_Status(ID, &Button_status[ID].CurrentRead);
+        HSwitch_Get_Status(ID - BUTTONUART_INCREMENT, &Button_status[ID].CurrentRead);
 
         /* Check if button was pressed last time */
         if(Button_status[ID].CurrentRead == BUTTON_IS_PRESSED && Button_status[ID].LastRead == BUTTON_IS_PRESSED)
@@ -121,26 +155,35 @@ void Button_task(void)
     }
 
     
-    // /* Encode Buttons reads */
-    // uint8_t status = 0;
-    // UART_TX_frame = 0;
 
-    // HSwitch_Get_Status(Increment, &status);
-    // UART_TX_frame |= (status << Increment);
+    /* Send the UART frame */
+    UART_TX_frame = 0;
+    if(Button_isPressed(BUTTONUART_INCREMENT))
+    {
+        UART_TX_frame = UARTMSG_INC_BUTTON_IS_PRESSED;
+    }
+    else if(Button_isPressed(BUTTONUART_EDIT))
+    {
+        UART_TX_frame = UARTMSG_EDIT_BUTTON_IS_PRESSED;
+    }   
+    else if(Button_isPressed(BUTTONUART_MODE))
+    {
+        UART_TX_frame = UARTMSG_MODE_BUTTON_IS_PRESSED;
+    }    
+    else if(Button_isPressedAndHeld(BUTTONUART_MODE) && Button_isPressedAndHeld(BUTTONUART_EDIT))
+    {
+        UART_TX_frame = UARTMSG_MODE_EDIT_BUTTON_IS_HELD;
+    }    
 
-    // HSwitch_Get_Status(Mode, &status);
-    // UART_TX_frame |= (status<< Mode);
-
-    // HSwitch_Get_Status(Edit, &status);
-    // UART_TX_frame |= (status << Edit); 
-
-    // /* Send the UART frame */
-    // HUSART_UserReq_t HUART_TxReq =
-    // {
-    //     .USART_ID = USART1_ID,
-    //     .Ptr_buffer= &UART_TX_frame,
-    //     .Buff_Len = 1,
-    //     .Buff_cb = 0,
-    // };
-    // HUART_SendBuffAsync(&HUART_TxReq);
+    if(UART_TX_frame != 0)
+    {
+        HUSART_UserReq_t HUART_TxReq =
+        {
+            .USART_ID = USART1_ID,
+            .Ptr_buffer= &UART_TX_frame,
+            .Buff_Len = 1,
+            .Buff_cb = 0,
+        };
+        HUART_SendBuffAsync(&HUART_TxReq);
+    }
 }
