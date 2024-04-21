@@ -1,126 +1,165 @@
-/********************************************************************************************************/
-/************************************************Includes************************************************/
-/********************************************************************************************************/
+/*
+ ============================================================================
+ Name        : USART.h
+ Author      : Omar Medhat Mohamed
+ Description : Header File for the USART Driver
+ Date        : 30/3/2024
+ ============================================================================
+ */
+#ifndef USART_H_
+#define USART_H_
+/*******************************************************************************
+ *                                Includes	                                  *
+ *******************************************************************************/
+#include "Mask32.h"
+#include "Error.h"
+#include  "USART_cfg.h"
 
-#include "StdTypes.h"
-
-/********************************************************************************************************/
-/************************************************Defines*************************************************/
-/********************************************************************************************************/
-
-// Masks for all bits of USART CR1 register
-#define USART_CR1_SBK       ((u32)0x00000001) // Send Break
-#define USART_CR1_RWU       ((u32)0x00000002) // Receiver wakeup
-#define USART_CR1_RE        ((u32)0x00000004) // Receiver enable
-#define USART_CR1_TE        ((u32)0x00000008) // Transmitter enable
-#define USART_CR1_IDLEIE    ((u32)0x00000010) // IDLE interrupt enable
-#define USART_CR1_RXNEIE    ((u32)0x00000020) // RXNE interrupt enable
-#define USART_CR1_TCIE      ((u32)0x00000040) // Transmission complete interrupt enable
-#define USART_CR1_TXEIE     ((u32)0x00000080) // TXE interrupt enable
-#define USART_CR1_PEIE      ((u32)0x00000100) // PE interrupt enable
-#define USART_CR1_PS        ((u32)0x00000200) // Parity selection
-#define USART_CR1_PCE       ((u32)0x00000400) // Parity control enable
-#define USART_CR1_WAKE      ((u32)0x00000800) // Wakeup method
-#define USART_CR1_M         ((u32)0x00001000) // Word length
-#define USART_CR1_UE        ((u32)0x00002000) // USART enable
-#define USART_CR1_OVER8     ((u32)0x00008000) // Oversampling mode
-#define USART_CR2_STOP_0    ((u32)0x00001000) // Bit 12: STOP bit 0
-#define USART_CR2_STOP_1    ((u32)0x00002000) // Bit 13: STOP bit 1
-#define USART_CR2_STOP_1_5  ((u32)(USART_CR2_STOP_0 | USART_CR2_STOP_1)) // Bits 12 and 13: STOP bits 1.5
+/*******************************************************************************/
+/* Boolean Data Type */
+typedef unsigned char boolean;
 
 
 
-// Word length options
-#define USART_WORDLENGTH_8B           ((u32)0x00000000) // 8 bits
-#define USART_WORDLENGTH_9B           ((u32)USART_CR1_M) // 9 bits
+#define LOGIC_HIGH        (1u)
+#define LOGIC_LOW         (0u)
 
-// Stop bits options
-#define USRT_MASK_STOPBITS            ((u32)0x00003000)
-#define USART_STOPBITS_1              ((u32)0x00000000) // 1 stop bit
-#define USART_STOPBITS_0_5            ((u32)USART_CR2_STOP_0) // 0.5 stop bit
-#define USART_STOPBITS_2              ((u32)USART_CR2_STOP_1) // 2 stop bits
-#define USART_STOPBITS_1_5            ((u32)(USART_CR2_STOP_0 | USART_CR2_STOP_1)) // 1.5 stop bits
+#define NULL    ((void*)0)
 
-// Parity options
-#define USART_PARITY_NONE             ((u32)0x00000000) // No parity
-#define USART_PARITY_EVEN             ((u32)USART_CR1_PCE) // Even parity
-#define USART_PARITY_ODD              ((u32)(USART_CR1_PCE | USART_CR1_PS)) // Odd parity
+typedef unsigned char         uint8_t;          /*           0 .. 255              */
+typedef signed char           sint8_t;          /*        -128 .. +127             */
+typedef unsigned short        uint16_t;         /*           0 .. 65535            */
+typedef signed short          sint16_t;         /*      -32768 .. +32767           */
+typedef unsigned long         uint32_t;         /*           0 .. 4294967295       */
+typedef signed long           sint32_t;         /* -2147483648 .. +2147483647      */
+typedef unsigned long long    uint64_t;         /*       0 .. 18446744073709551615  */
+typedef signed long long      sint64_t;         /* -9223372036854775808 .. 9223372036854775807 */
+typedef float                 float32_t;
+typedef double                float64_t;
+/*******************************************************************************/
 
-// Mode options
-#define USART_MODE_RX                 ((u32)USART_CR1_RE) // Receive mode
-#define USART_MODE_TX                 ((u32)USART_CR1_TE) // Transmit mode
-#define USART_MODE_TX_RX              ((u32)(USART_CR1_TE | USART_CR1_RE)) // Transmit and receive mode
+/*******************************************************************************
+ *                                Definitions                                  *
+ *******************************************************************************/
+#define USART1_ID 				0
+#define USART2_ID 				1
+#define USART6_ID 				2
+#define USART_WL_8BIT_DATA		0X00000000
+#define USART_WL_9BIT_DATA		0X00001000
+#define USART_PARITY_ENABLE		0X00000400
+#define USART_PARITY_DISABLE	0X00000000
+#define USART_EVEN_PARITY		0X00000000
+#define USART_ODD_PARITY		0X00000200
+#define USART_STOP_BIT_1		0X00000000
+#define USART_STOP_BIT_1_5		0X00003000
+#define USART_STOP_BIT_0_5		0X00001000
+#define USART_STOP_BIT_2		0X00002000
+#define USART_OVS_8				0X00008000
+#define USART_OVS_16			0X00000000
+#define FCPU					16000000
+#define	Done					1
+#define	NOT_Done				0
+/*******************************************************************************
+ *                        	  Types Declaration                                 *
+ *******************************************************************************/
+typedef void (*Cb)(void);
+/**
+ * @brief    : USART configuration structure.
+ **/
+typedef struct
+{
+	uint8_t 	USART_ID;
+	uint32_t 	BaudRate;
+	uint32_t 	WordLength;
+	uint32_t 	ParityEn;
+	uint32_t 	ParityType;
+	uint32_t 	StopBits;
+	uint32_t 	OverSamplingMode;
+}
+USART_Config_t;
+/**
+ * @brief    : USART user request structure.
+ **/
+typedef struct
+{
+	uint8_t USART_ID;
+	uint8_t *Ptr_buffer ;
+	uint32_t Buff_Len ;
+	Cb 		Buff_cb	;
+}
+USART_UserReq_t;
+/*******************************************************************************
+ *                  	    Functions Prototypes                               *
+ *******************************************************************************/
+/**
+ * @brief    : Initializes USART communication.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of USART initialization.
+ * @details  : This function initializes USART communication by configuring the USART peripheral,
+ *             setting the baud rate, configuring frame format (word length, parity, stop bits),
+ *             and enabling USART communication.
+ */ 
+Error_enumStatus_t USART_Init(void);
+/**
+ * @brief    : Transmits a single byte over USART.
+ * @param[in]: Ptr_UserReq Pointer to USART user request structure containing transmit parameters.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the transmission.
+ * @details  : This function transmits a single byte of data over USART.
+ *             It checks for NULL pointer input and the length of the transmit buffer.
+ *             If the USART transmit request is ready, it sets the request state to busy,
+ *             transmits the byte of data, and waits for the transmission to complete.
+ **/
+Error_enumStatus_t USART_SendByte(USART_UserReq_t* Ptr_UserReq);
+/**
+ * @brief    : Receives a single byte over USART.
+ * @param[in]: Ptr_UserReq Pointer to USART user request structure containing receive parameters.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the reception.
+ * @details  : This function receives a single byte of data over USART.
+ *             It checks for NULL pointer input and the length of the receive buffer.
+ *             If the USART receive request is ready, it sets the request state to busy,
+ *             enables USART receive, waits for a byte of data to be received, and reads the received byte.
+ **/
+Error_enumStatus_t USART_GetByte(USART_UserReq_t* Ptr_UserReq);
+/**
+ * @brief    : Asynchronously transmits data over USART.
+ * @param[in]: Ptr_UserReq Pointer to USART user request structure containing transmit parameters.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the transmission.
+ * @details  : This function initiates asynchronous transmission of data over USART.
+ *             It checks for NULL pointer input and the state of the USART transmit request.
+ *             If the USART transmit request is ready, it sets the request state to busy,
+ *             copies the transmit buffer parameters from the user request structure,
+ *             enables USART transmit, loads the first byte of data into the USART data register,
+ *             and enables USART transmit data register empty interrupt.
+ **/
+Error_enumStatus_t USART_TxBufferAsyncZeroCopy(USART_UserReq_t* Ptr_UserReq );
+/**
+ * @brief    : Asynchronously receives data over USART.
+ * @param[in]: Ptr_UserReq Pointer to USART user request structure containing receive parameters.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the reception.
+ * @details  : This function initiates asynchronous reception of data over USART.
+ *             It checks for NULL pointer input and the state of the USART receive request.
+ *             If the USART receive request is ready, it clears RXNE flag,
+ *             sets the request state to busy, copies the receive buffer parameters from the user request structure,
+ *             enables USART receive, and enables USART receive data register not empty interrupt.
+ **/
+Error_enumStatus_t USART_RxBufferAsyncZeroCopy(USART_UserReq_t* Ptr_UserReq );
+/**
+ * @brief    : Checks if USART transmission is completed.
+ * @param[in]: USART_ID   USART ID.
+ * @param[out]: Ptr_Status Pointer to a variable to store the status of transmission completion.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the operation.
+ * @details  : This function checks if the transmission over the specified USART is completed.
+ *             It reads the USART status register to determine the transmission status.
+ **/
+Error_enumStatus_t USART_TxDone(uint8_t USART_ID,uint8_t *Ptr_Status);
+/**
+ * @brief    : Checks if USART is ready to receive data.
+ * @param[in]: USART_ID   USART ID.
+ * @param[out]: Ptr_Status Pointer to a variable to store the status of USART reception.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the operation.
+ * @details  : This function checks if the specified USART is ready to receive data.
+ *             It reads the USART status register to determine the reception status.
+ **/
+Error_enumStatus_t USART_IsRx(uint8_t USART_ID,uint8_t *Ptr_Status);
 
 
-// Oversampling mode options
-#define USART_OVERSAMPLING_16         ((u32)0x00000000) // Oversampling by 16
-#define USART_OVERSAMPLING_8          ((u32)USART_CR1_OVER8) // Oversampling by 8
-
-
-// One-bit sampling method options
-#define USART_ONEBIT_DISABLE          ((uint32_t)0x00000000) // One-bit sampling method disabled
-#define USART_ONEBIT_ENABLE           ((uint32_t)USART_CR3_ONEBIT) // One-bit sampling method enabled
-
-
-// Masks for USART_CR1 register to Control Interrupts options (RXNE, TXE, TC, PE)
-#define USART_RXNEIE_ENABLE    ((u32)USART_CR1_RXNEIE) // Mask for RXNE interrupt enable bit
-#define USART_RXNEIE_DISABLE   ((u32)0x00000000) // Disable RXNE interrupt
-
-#define USART_TXEIE_ENABLE     ((u32)USART_CR1_TXEIE) // Mask for TXE interrupt enable bit
-#define USART_TXEIE_DISABLE    ((u32)0x00000000)  // Disable TXE interrupt
-
-#define USART_TCIE_ENABLE      ((u32)USART_CR1_TCIE) // Mask for Transmission complete interrupt enable bit
-#define USART_TCIE_DISABLE     ((u32)0x00000000)   // Disable Transmission complete interrupt
-
-#define USART_PEIE_ENABLE      ((u32)USART_CR1_PEIE) // Mask for Parity error interrupt enable bit
-#define USART_PEIE_DISABLE     ((u32)0x00000000)   // Disable Parity error interrupt
-
-/********************************************************************************************************/
-/************************************************Types***************************************************/
-/********************************************************************************************************/
-
-typedef enum{
-    USART1,
-    USART2,
-    USART6
-}USART_IDNum_t;
-
-typedef struct {
-    u8   IDNum;
-    u32  BaudRate;            // Baud rate for communication
-    u32  WordLength;          // Number of data bits transmitted or received
-    u32  StopBits;            // Number of stop bits
-    u32  Parity;              // Parity control mode
-    u32  Mode;                // Transmission mode (e.g., TX, RX, TX/RX)
-    u32  OverSampling;        // Oversampling mode (e.g., 16 or 8)
-    u32  RxneInterrupt;       // RXNE interrupt enable/disable
-    u32  TxeInterrupt;        // TXE interrupt enable/disable
-    u32  TcInterrupt;         // Transmission complete interrupt enable/disable
-}USART_instanceConfig_t;
-
-
-typedef enum{
-    USART_Ok,
-    USART_Nok,
-    USART_NullPtr,
-    USART_InvalidParamter,
-    USART_TxFailed,
-    USART_RxFailed
-}USART_errorState_t;
-
-typedef void (*USART_callBackFuncPtr_t)(void);
-
-/********************************************************************************************************/
-/************************************************APIs****************************************************/
-/********************************************************************************************************/
-
-
-USART_errorState_t USART_init(USART_instanceConfig_t *instance);
-
-USART_errorState_t USART_sendByte(u8 UART_NUM, u8 data);
-
-USART_errorState_t USART_recieveByte(u8 UART_NUM, u8 *data);
-
-USART_errorState_t USART_sendBufferAsync(u8 UART_NUM, u8 *buffer, u16 bufLen, USART_callBackFuncPtr_t cb);
-
-USART_errorState_t USART_recieveBufferAsync(u8 UART_NUM, u8 *buffer, u16 bufLen, USART_callBackFuncPtr_t cb);
+#endif

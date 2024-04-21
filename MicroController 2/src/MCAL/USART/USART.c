@@ -1,575 +1,748 @@
-/********************************************************************************************************/
-/************************************************Includes************************************************/
-/********************************************************************************************************/
-
-#include "USART.h"
-#include "USART_cfg.h"
-
-/********************************************************************************************************/
-/************************************************Defines*************************************************/
-/********************************************************************************************************/
-
-
-#define USART1_BASE_ADDRESS     ((void*)0x40011000)
-#define USART2_BASE_ADDRESS     ((void*)0x40004400)
-#define USART6_BASE_ADDRESS     ((void*)0x40011400)
-
-#define USART_SR_PE_Msk    ((u32)0x00000001) // Parity error flag
-#define USART_SR_FE_Msk    ((u32)0x00000002) // Framing error flag
-#define USART_SR_NE_Msk    ((u32)0x00000004) // Noise detection flag
-#define USART_SR_ORE_Msk   ((u32)0x00000008) // Overrun error flag
-#define USART_SR_IDLE_Msk  ((u32)0x00000010) // IDLE line detected flag
-#define USART_SR_RXNE_Msk  ((u32)0x00000020) // Read data register not empty flag
-#define USART_SR_TC_Msk    ((u32)0x00000040) // Transmission complete flag
-#define USART_SR_TXE_Msk   ((u32)0x00000080) // Transmit data register empty flag
-#define USART_SR_LBD_Msk   ((u32)0x00000100) // LIN break detection flag
-#define USART_SR_CTS_Msk   ((u32)0x00000200) // CTS flag
-
-
-// Validation macros for USART avaliable periherals options
-#define IS_NOT_USART_OPTION(option) (((option) != USART1) && ((option) != USART2) && ((option) != USART6))
-
-
-
-
-// Validation macros for USART configuration options
-
-// Word length validation macro
-#define IS_NOT_USART_WORD_LENGTH(LENGTH) (!((LENGTH) == USART_WORDLENGTH_8B) && \
-                                           !((LENGTH) == USART_WORDLENGTH_9B))
-
-// Stop bits validation macro
-#define IS_NOT_USART_STOPBITS(STOPBITS) (!((STOPBITS) == USART_STOPBITS_1) && \
-                                           !((STOPBITS) == USART_STOPBITS_0_5) && \
-                                           !((STOPBITS) == USART_STOPBITS_2) && \
-                                           !((STOPBITS) == USART_STOPBITS_1_5))
-
-// Parity validation macro
-#define IS_NOT_USART_PARITY(PARITY) (!((PARITY) == USART_PARITY_NONE) && \
-                                       !((PARITY) == USART_PARITY_EVEN) && \
-                                       !((PARITY) == USART_PARITY_ODD))
-
-// Mode validation macro
-#define IS_NOT_USART_MODE(MODE) (!((MODE) == USART_MODE_RX) && \
-                                   !((MODE) == USART_MODE_TX) && \
-                                   !((MODE) == USART_MODE_TX_RX))
-
-
-
-// Oversampling mode validation macro
-#define IS_NOT_USART_OVERSAMPLING(SAMPLING) (!((SAMPLING) == USART_OVERSAMPLING_16) && \
-                                               !((SAMPLING) == USART_OVERSAMPLING_8))
-
-
-// Validation macros for USART interrupt masks
-// RXNE interrupt enable mask validation macro
-#define IS_NOT_USART_RXNEIE_OPTION(MASK) (((MASK) != USART_RXNEIE_ENABLE) && ((MASK) != USART_RXNEIE_DISABLE))
-
-// TXE interrupt enable mask validation macro
-#define IS_NOT_USART_TXEIE_OPTION(MASK) (((MASK) != USART_TXEIE_ENABLE) && ((MASK) != USART_TXEIE_DISABLE))
-
-// TC interrupt enable mask validation macro
-#define IS_NOT_USART_TCIE_OPTION(MASK) (((MASK) != USART_TCIE_ENABLE) && ((MASK) != USART_TCIE_DISABLE))
-
-// PE interrupt enable mask validation macro
-#define IS_NOT_USART_PEIE_OPTION(MASK) (((MASK) != USART_PEIE_ENABLE) && ((MASK) != USART_PEIE_DISABLE))
-
-
-/********************************************************************************************************/
-/************************************************Types***************************************************/
-/********************************************************************************************************/
-
-typedef struct{
-    volatile u32 SR;    // USART Status Register
-    volatile u32 DR;    // USART Data Register
-    volatile u32 BRR;   // USART Baud Rate Register
-    volatile u32 CR1;   // USART Control Register 1
-    volatile u32 CR2;   // USART Control Register 2
-    volatile u32 CR3;   // USART Control Register 3
-    volatile u32 GTPR;  // USART Guard time and prescaler Register (not available on all STM32 series)
-} USART_registers_t;
-
-
-
-typedef enum{
-    USART_Ready,
-    USART_Busy
-}USART_TxRxState_t;
-
-typedef struct{
-    u8 *data;
-    u16 size;
-    u16 currPos;
-}USART_bufferConfig_t;
-
-typedef struct{
-    USART_bufferConfig_t *buffer;
-    USART_TxRxState_t state;
-    USART_callBackFuncPtr_t cbf;
-}USART_TxReq_t;
-
-typedef struct{
-    USART_bufferConfig_t *buffer;
-    USART_TxRxState_t state;
-    USART_callBackFuncPtr_t cbf;
-}USART_RxReq_t;
-
-/********************************************************************************************************/
-/************************************************Variables***********************************************/
-/********************************************************************************************************/
-volatile USART_registers_t *const USARTs[3] = {(volatile USART_registers_t *)USART1_BASE_ADDRESS,
-                                             (volatile USART_registers_t *)USART2_BASE_ADDRESS,
-                                             (volatile USART_registers_t *)USART6_BASE_ADDRESS};
-
-u32 USART_ClkFreq[3] = {UART1_CLK_FREQ, UART2_CLK_FREQ, UART6_CLK_FREQ};
-
-USART_TxReq_t TXs[3] = {{.state = USART_Ready}, {.state = USART_Ready}, {.state = USART_Ready}};
-USART_RxReq_t RXs[3] = {{.state = USART_Ready}, {.state = USART_Ready}, {.state = USART_Ready}};
-
-/********************************************************************************************************/
-/*****************************************Static Functions Prototype*************************************/
-/********************************************************************************************************/
-
-/*static u32 roundDoubleToInt(double dNum)
+/*
+ ============================================================================
+ Name        : USART.c
+ Author      : Omar Medhat Mohamed
+ Description : Source File for the USART Driver
+ Date        : 30/3/2024
+ ============================================================================
+ */
+/*******************************************************************************
+ *                                Includes	                                  *
+ *******************************************************************************/
+#include "MCAL/USART.h"
+/*******************************************************************************
+ *                             Definitions                                      *
+ *******************************************************************************/
+#define USART1_BA (void *)0x40011000
+#define USART2_BA (void *)0x40004400
+#define USART6_BA (void *)0x40011400
+#define UART_NUMS_IN_TARGET 3
+#define MANTISSA_SHIFT 4
+#define UART_PRE_ENABLE_MASK 0X00002000
+#define UART_TX_ENABLE_MASK 0X00000008
+#define UART_TXE_ENABLE_MASK 0X00000080
+#define UART_RX_ENABLE_MASK 0X00000004
+#define UART_RXE_ENABLE_MASK 0X00000020
+#define UART_RX_CLR_ENABLE_MASK 0XFFFFFFFB
+#define UART_TX_EMPTY_FLAG 0X00000080
+#define UART_RX_NOT_EMPTY_FLAG 0X00000020
+#define UART_TX_DONE_FLAG 0X00000040
+/*******************************************************************************
+ *                        	  Types Declaration                                 *
+ *******************************************************************************/
+typedef void (*TX_CBF_t)(void);
+typedef void (*RX_CBF_t)(void);
+typedef enum
 {
-    u32 iNum = dNum;
-    double diff = dNum - (double)iNum;
-    if(diff >= (double)0.5)
-    {
-        iNum++;
-    }
-    return iNum;
-}
-static u32 calcBaudRate(void *instanceName, u32 baud, u32 overSampling)
+    USART_ReqReady,
+    USART_ReqBusy
+} USART_UserRequestState;
+typedef struct
 {
-    u32 usartBRR = 0;
-    u32 DIVMant = 0, DIVfracInteger = 0;
-    double usartDIV = 0.0, DIVfrac = 0.0;
-    
-    //overSampling >>= 15;
-
-    if(instanceName == USART1)
-    {
-        if(overSampling == USART_OVERSAMPLING_8)
-        {
-            usartDIV = (UART1_CLK_FREQ / (8 * baud));
-            DIVMant = (u32)usartDIV;
-            DIVfrac = (usartDIV - ((u32)usartDIV)) * 8;
-            DIVfracInteger = roundDoubleToInt(DIVfrac);
-            if(DIVfracInteger > 7)
-            {
-                DIVMant++;
-            }
-            usartBRR = (DIVMant<<4) | DIVfracInteger;
-        }
-        else if(overSampling == USART_OVERSAMPLING_16)
-        {
-            usartDIV = (UART1_CLK_FREQ / (8 * 2 * baud));
-            DIVMant = (u32)usartDIV;
-            DIVfrac = (usartDIV - ((u32)usartDIV)) * 16;
-            DIVfracInteger = roundDoubleToInt(DIVfrac);
-            if(DIVfracInteger > 15)
-            {
-                DIVMant++;
-                DIVfracInteger = 0;
-            }
-            usartBRR = (DIVMant<<4) | DIVfracInteger;
-        }
-       
-
-    }
-    else if(instanceName == USART2)
-    {
-        if(overSampling == USART_OVERSAMPLING_8)
-        {
-            usartDIV = (UART2_CLK_FREQ / (8 * baud));
-            DIVMant = (u32)usartDIV;
-            DIVfrac = (usartDIV - ((u32)usartDIV)) * 8;
-            DIVfracInteger = roundDoubleToInt(DIVfrac);
-            if(DIVfracInteger > 7)
-            {
-                DIVMant++;
-            }
-            usartBRR = (DIVMant<<4) | DIVfracInteger;
-        }
-        else if(overSampling == USART_OVERSAMPLING_16)
-        {
-            usartDIV = (UART2_CLK_FREQ / (8 * 2 * baud));
-            DIVMant = (u32)usartDIV;
-            DIVfrac = (usartDIV - ((u32)usartDIV)) * 16;
-            DIVfracInteger = roundDoubleToInt(DIVfrac);
-            if(DIVfracInteger > 15)
-            {
-                DIVMant++;
-            }
-            usartBRR = (DIVMant<<4) | DIVfracInteger;
-        }
-    }
-    else if(instanceName == USART6)
-    {
-        if(overSampling == USART_OVERSAMPLING_8)
-        {
-            usartDIV = (UART6_CLK_FREQ / (8 * baud));
-            DIVMant = (u32)usartDIV;
-            DIVfrac = (usartDIV - ((u32)usartDIV)) * 8;
-            DIVfracInteger = roundDoubleToInt(DIVfrac);
-            if(DIVfracInteger > 7)
-            {
-                DIVMant++;
-            }
-            usartBRR = (DIVMant<<4) | DIVfracInteger;
-        }
-        else if(overSampling == USART_OVERSAMPLING_16)
-        {
-            usartDIV = (UART6_CLK_FREQ / (8 * 2 * baud));
-            DIVMant = (u32)usartDIV;
-            DIVfrac = (usartDIV - ((u32)usartDIV)) * 16;
-            DIVfracInteger = roundDoubleToInt(DIVfrac);
-            if(DIVfracInteger > 15)
-            {
-                DIVMant++;
-            }
-            usartBRR = (DIVMant<<4) | DIVfracInteger;
-        }
-    }
-
-    return usartBRR;
-}*/
-
-static u32 calcBaudRate(u8 instanceIDNum, u32 baud, u32 overSampling)
+    uint8_t *data;
+    uint32_t Pos;
+    uint32_t size;
+} USART_buffer_t;
+typedef struct
 {
-    u32 usartBRR = 0;
-    u32 DIVMant = 0, DIVfracInteger = 0;
-    double usartDIV = 0.0;
-    double DIVfrac = 0.0;
-
-    // Determine UART clock frequency based on the USART instance
-    u32 UART_CLK_FREQ = USART_ClkFreq[instanceIDNum];
-    
-
-    // Calculate the USART BRR value based on the oversampling mode
-    if (overSampling == USART_OVERSAMPLING_8) {
-        usartDIV = (double)(UART_CLK_FREQ) / (8 * baud);
-        DIVfrac = (usartDIV - (u32)usartDIV) * 8;
-    } else if (overSampling == USART_OVERSAMPLING_16) {
-        usartDIV = (double)(UART_CLK_FREQ) / (8 * 2 * baud);
-        DIVfrac = (usartDIV - (u32)usartDIV) * 16;
-    }
-
-    DIVMant = (u32)usartDIV;
-    DIVfracInteger = (u32)(DIVfrac + 0.5); // Round fractional part to nearest integer
-
-    if (DIVfracInteger > (overSampling == USART_OVERSAMPLING_8 ? 7 : 15)) {
-        DIVMant++;
-        DIVfracInteger = 0; // Carry over, fractional part becomes 0
-    }
-
-    // Construct the USART BRR value
-    usartBRR = (DIVMant << 4) | DIVfracInteger;
-
-    return usartBRR;
-}
-
-
-
-/********************************************************************************************************/
-/*********************************************APIs Implementation****************************************/
-/********************************************************************************************************/
-
-
-USART_errorState_t USART_init(USART_instanceConfig_t *instance)
+    USART_buffer_t buffer;
+    USART_UserRequestState state;
+    TX_CBF_t CB;
+} USART_TxReq_t;
+typedef struct
 {
-    USART_errorState_t errorState = USART_Nok;
-    if(instance == NULLPTR)
+    USART_buffer_t buffer;
+    USART_UserRequestState state;
+    TX_CBF_t CB;
+} USART_RXReq_t;
+typedef struct
+{
+    uint32_t USART_SR;
+    uint32_t USART_DR;
+    uint32_t USART_BRR;
+    uint32_t USART_CR1;
+    uint32_t USART_CR2;
+    uint32_t USART_CR3;
+    uint32_t USART_GTPR;
+
+} USART_PERI_t;
+
+/*******************************************************************************
+ *                              Variables		                                *
+ *******************************************************************************/
+extern const USART_Config_t USARTS[_USART_Num];
+volatile void *const USART[UART_NUMS_IN_TARGET] = {USART1_BA, USART2_BA, USART6_BA};
+static USART_TxReq_t TxReq[_USART_Num];
+static USART_RXReq_t RxReq[_USART_Num];
+uint8_t g_UART1_idx;
+uint8_t g_UART2_idx;
+uint8_t g_UART6_idx;
+/*******************************************************************************
+ *                             Implementation   				                *
+ *******************************************************************************/
+/**
+ * @brief    : Initializes USART communication.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of USART initialization.
+ * @details  : This function initializes USART communication by configuring the USART peripheral,
+ *             setting the baud rate, configuring frame format (word length, parity, stop bits),
+ *             and enabling USART communication.
+ */
+Error_enumStatus_t USART_Init(void)
+{
+    /* Local Variable to store error status */
+    Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
+    /* Local variable for loop iteration */
+    uint8_t Loc_idx;
+    /* Baud Rate Register value */
+    uint32_t Loc_BRRValue = 0;
+    /* Control Register 1 value */
+    uint32_t Loc_CR1Value = 0;
+    /* Control Register 2 value */
+    uint32_t Loc_CR2Value = 0;
+    /* Oversampling mode */
+    uint32_t Loc_OVER8 = 0;
+    /* USART Divider value */
+    uint32_t Loc_USARTDIVValue = 0;
+    /* Fractional part of the divider */
+    uint32_t Loc_DIV_Fraction = 0;
+    /* Mantissa part of the divider */
+    uint32_t Loc_DIV_Mantissa = 0;
+
+    /* Check if USART number is valid */
+    if (_USART_Num > (USART6_ID + 1))
     {
-        errorState = USART_NullPtr;
-    }
-    else if(IS_NOT_USART_OPTION(instance->IDNum) ||
-            IS_NOT_USART_MODE(instance->Mode) || 
-            IS_NOT_USART_WORD_LENGTH(instance->WordLength) ||
-            IS_NOT_USART_STOPBITS(instance->StopBits) ||
-            IS_NOT_USART_PARITY(instance->Parity) ||
-            IS_NOT_USART_OVERSAMPLING(instance->OverSampling) ||
-            IS_NOT_USART_RXNEIE_OPTION(instance->RxneInterrupt) ||
-            IS_NOT_USART_TXEIE_OPTION(instance->TxeInterrupt) ||
-            IS_NOT_USART_TCIE_OPTION(instance->TcInterrupt))
-    {
-        errorState = USART_InvalidParamter;
+        Loc_enumReturnStatus = Status_enumWrongInput;
     }
     else
     {
-        errorState = USART_Ok;
-
-        volatile USART_registers_t *const USART = (volatile USART_registers_t *)USARTs[(instance->IDNum)];
-        u32 tempCR1 = USART->CR1;
-        u32 tempCR2 = USART->CR2;
-
-        tempCR1 |=   instance->Mode |
-                     instance->WordLength |
-                     instance->OverSampling |
-                     instance->Parity |
-                     instance->RxneInterrupt |
-                     instance->TxeInterrupt |
-                     instance->TcInterrupt;
-
-        tempCR2 &= ~(USRT_MASK_STOPBITS);
-        tempCR2 |= instance->StopBits;
-
-        USART->BRR = calcBaudRate(instance->IDNum, instance->BaudRate, instance->OverSampling);
-        USART->CR1 = tempCR1;
-        USART->CR2 = tempCR2;
-    }
-
-    return errorState;
-}
-
-USART_errorState_t USART_sendByte(u8 UART_NUM, u8 data)
-{
-    USART_errorState_t errorState = USART_Nok;
-    volatile USART_registers_t *const USART = (volatile USART_registers_t*) USARTs[UART_NUM];
-    u32 timeOut = 3000;
-
-    if(IS_NOT_USART_OPTION(UART_NUM))
-    {
-        errorState = USART_NullPtr;
-    }
-    else
-    {
-        errorState = USART_Ok;
-        if(TXs[UART_NUM].state == USART_Ready)
+        /* Iterate over each USART */
+        for (Loc_idx = 0; Loc_idx < _USART_Num; Loc_idx++)
         {
-            TXs[UART_NUM].state = USART_Busy;
-            USART->DR = data;
-            while(timeOut && (!(USART->SR & USART_SR_TXE_Msk)))
-                timeOut--;
-            TXs[UART_NUM].state = USART_Ready;
-        }
-        if(timeOut == 0)
-        {
-           errorState = USART_TxFailed; 
-        }
-    }
-    return errorState;
-}
-
-USART_errorState_t USART_recieveByte(u8 UART_NUM, u8 *data)
-{
-    USART_errorState_t errorState = USART_Nok;
-    volatile USART_registers_t *const USART = USARTs[UART_NUM];
-    u32 timeOut = 3000;
-
-    if(IS_NOT_USART_OPTION(UART_NUM))
-    {
-        errorState = USART_NullPtr;
-    }
-    else
-    {
-        errorState = USART_Ok;
-        if(RXs[UART_NUM].state == USART_Ready)
-        {
-            RXs[UART_NUM].state = USART_Busy;
-            while(timeOut && (!(USART->SR & USART_SR_RXNE_Msk)))
-                timeOut--;
-            if(timeOut)
+            /**
+             * Calculate USARTDIV value to set the required Tx/Rx baud as the equations is
+             * Tx/Rx baud Rate = F_CK / ( 8 × (2 – OVER8) × USARTDIV) )
+             */
+            /** Calculate oversampling mode value
+             * As if i use over sample by 8 the  Loc_OVER8 value will equal 1 otherwise it will equal zero**/
+            Loc_OVER8 = USARTS[Loc_idx].OverSamplingMode / USART_OVS_8;
+            /** Calculate USART Divider value Multiplied by 100 to get the first to fraction digits
+             * As if USARTDIV is equal to 50.99 i make it equals 5099
+             */
+            Loc_USARTDIVValue = (FCPU * 100) / (8 * (2 - Loc_OVER8) * USARTS[Loc_idx].BaudRate);
+            /** Calculate fractional part of divider from the below equation :
+             * DIV_Fraction = ( 8 × (2 – OVER8) * fraction part which it is the first 2 digits from
+             * USARTDIV value after multiply it by 100
+             */
+            Loc_DIV_Fraction = (Loc_USARTDIVValue % 100) * (8 * (2 - Loc_OVER8));
+            /* Adjust fractional part i get the nearest real number for it */
+            if (Loc_DIV_Fraction % 100 != 0)
             {
-                *data = (u8)USART->DR;
+                /*Got the real value of DIV_Factor after divid it by 100 */
+                Loc_DIV_Fraction = ((Loc_DIV_Fraction / 100) + 1);
             }
             else
             {
-                errorState = USART_RxFailed; 
+                Loc_DIV_Fraction = Loc_DIV_Fraction / 100;
             }
-            RXs[UART_NUM].state = USART_Ready;
+            /* Calculate mantissa part of divider as it uqual the real part of  USARTDIV value so i divid it by 100 */
+            Loc_DIV_Mantissa = Loc_USARTDIVValue / 100;
+            /* Adjust mantissa and fractional parts if needed in case of overflow happened */
+            if (((Loc_OVER8 == 1) && (Loc_DIV_Fraction == 8)) || ((Loc_OVER8 == 0) && (Loc_DIV_Fraction == 16)))
+            {
+                /*Set DIV_Fraction by zero and add the carry to mantissa */
+                Loc_DIV_Fraction = 0;
+                Loc_DIV_Mantissa++;
+            }
+            /* Combine mantissa and fractional parts to get BRR value */
+            Loc_DIV_Mantissa = Loc_DIV_Mantissa << MANTISSA_SHIFT;
+            Loc_BRRValue = Loc_DIV_Mantissa | Loc_DIV_Fraction;
+            /* Configure Control Register 1 value */
+            Loc_CR1Value = UART_PRE_ENABLE_MASK | USARTS[Loc_idx].OverSamplingMode | USARTS[Loc_idx].WordLength | USARTS[Loc_idx].ParityEn | USARTS[Loc_idx].ParityType;
+            /* Configure Control Register 2 value */
+            Loc_CR2Value = USARTS[Loc_idx].StopBits;
+            /* Set BRR value */
+            ((USART_PERI_t *)USART[USARTS[Loc_idx].USART_ID])->USART_BRR = Loc_BRRValue;
+            /* Set CR1 value */
+            ((USART_PERI_t *)USART[USARTS[Loc_idx].USART_ID])->USART_CR1 = Loc_CR1Value;
+            /* Set CR2 value */
+            ((USART_PERI_t *)USART[USARTS[Loc_idx].USART_ID])->USART_CR2 = Loc_CR2Value;
+            switch (USARTS[Loc_idx].USART_ID)
+            {
+            case USART1_ID:
+                g_UART1_idx = Loc_idx;
+                break;
+            case USART2_ID:
+                g_UART2_idx = Loc_idx;
+                break;
+            case USART6_ID:
+                g_UART6_idx = Loc_idx;
+                break;
+            default:
+                Loc_enumReturnStatus = Status_enumNotOk;
+                break;
+            }
+        }
+    }
+
+    /* Return the status of the USART initialization */
+    return Loc_enumReturnStatus;
+}
+
+/**
+ * @brief    : Asynchronously transmits data over USART.
+ * @param[in]: Ptr_UserReq Pointer to USART user request structure containing transmit parameters.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the transmission.
+ * @details  : This function initiates asynchronous transmission of data over USART.
+ *             It checks for NULL pointer input and the state of the USART transmit request.
+ *             If the USART transmit request is ready, it sets the request state to busy,
+ *             copies the transmit buffer parameters from the user request structure,
+ *             enables USART transmit, loads the first byte of data into the USART data register,
+ *             and enables USART transmit data register empty interrupt.
+ **/
+Error_enumStatus_t USART_TxBufferAsyncZeroCopy(USART_UserReq_t *Ptr_UserReq)
+{
+    /* Local Variable to store error status */
+    Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
+    uint8_t Loc_Reqidx =0;
+    /* Check for NULL pointer */
+    if (Ptr_UserReq == NULL)
+    {
+        Loc_enumReturnStatus = Status_enumNULLPointer;
+    }
+    else
+    {
+
+        switch (Ptr_UserReq->USART_ID)
+        {
+        case USART1_ID:
+            Loc_Reqidx = g_UART1_idx;
+            break;
+        case USART2_ID:
+            Loc_Reqidx = g_UART2_idx;
+            break;
+        case USART6_ID:
+            Loc_Reqidx = g_UART6_idx;
+            break;
+        default:
+            Loc_enumReturnStatus = Status_enumNotOk;
+            break;
+        }
+        if (TxReq[Loc_Reqidx].state == USART_ReqReady)
+        {
+            /* Set transmit request state to busy */
+            TxReq[Loc_Reqidx].state = USART_ReqBusy;
+            /* Copy transmit buffer parameters from user request */
+            TxReq[Loc_Reqidx].buffer.data = Ptr_UserReq->Ptr_buffer;
+            TxReq[Loc_Reqidx].buffer.size = Ptr_UserReq->Buff_Len;
+            TxReq[Loc_Reqidx].buffer.Pos = 0;
+            TxReq[Loc_Reqidx].CB = Ptr_UserReq->Buff_cb;
+            /* Enable USART transmit */
+            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 |= UART_TX_ENABLE_MASK;
+            /* Load first byte of data into USART data register */
+            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_DR = TxReq[Loc_Reqidx].buffer.data[0];
+            TxReq[Loc_Reqidx].buffer.Pos++;
+            /* Enable USART transmit data register empty interrupt */
+            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 |= UART_TXE_ENABLE_MASK;
         }
         else
         {
-            errorState = USART_RxFailed;
+            Loc_enumReturnStatus = Status_enumBusyState;
+        }
+    }
+    /* Return the status of the transmission */
+    return Loc_enumReturnStatus;
+}
+
+/**
+ * @brief    : Asynchronously receives data over USART.
+ * @param[in]: Ptr_UserReq Pointer to USART user request structure containing receive parameters.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the reception.
+ * @details  : This function initiates asynchronous reception of data over USART.
+ *             It checks for NULL pointer input and the state of the USART receive request.
+ *             If the USART receive request is ready, it clears RXNE flag,
+ *             sets the request state to busy, copies the receive buffer parameters from the user request structure,
+ *             enables USART receive, and enables USART receive data register not empty interrupt.
+ **/
+Error_enumStatus_t USART_RxBufferAsyncZeroCopy(USART_UserReq_t *Ptr_UserReq)
+{
+    /* Local Variable to store error status */
+    Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
+    uint8_t Loc_Reqidx =0;
+    /* Check for NULL pointer */
+    if (Ptr_UserReq == NULL)
+    {
+        Loc_enumReturnStatus = Status_enumNULLPointer;
+    }
+    else
+    {
+        switch (Ptr_UserReq->USART_ID)
+        {
+        case USART1_ID:
+            Loc_Reqidx = g_UART1_idx;
+            break;
+        case USART2_ID:
+            Loc_Reqidx = g_UART2_idx;
+            break;
+        case USART6_ID:
+            Loc_Reqidx = g_UART6_idx;
+            break;
+        default:
+            Loc_enumReturnStatus = Status_enumNotOk;
+            break;
+        }
+        if (RxReq[Loc_Reqidx].state == USART_ReqReady)
+        {
+            /* Clear RXNE flag */
+           // ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 &= UART_RX_CLR_ENABLE_MASK;
+            /* Set receive request state to busy */
+            RxReq[Loc_Reqidx].state = USART_ReqBusy;
+            /* Copy receive buffer parameters from user request */
+            RxReq[Loc_Reqidx].buffer.data = Ptr_UserReq->Ptr_buffer;
+            RxReq[Loc_Reqidx].buffer.size = Ptr_UserReq->Buff_Len;
+            RxReq[Loc_Reqidx].buffer.Pos = 0;
+            RxReq[Loc_Reqidx].CB = Ptr_UserReq->Buff_cb;
+            /* Enable USART receive */
+            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 |= UART_RX_ENABLE_MASK;
+            /* Enable USART receive data register not empty interrupt */
+            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 |= UART_RXE_ENABLE_MASK;
+        }
+        else
+        {
+            Loc_enumReturnStatus = Status_enumBusyState;
         }
     }
 
-    return errorState;
+    /* Return the status of the reception */
+    return Loc_enumReturnStatus;
 }
 
-USART_errorState_t USART_sendBufferAsync(u8 UART_NUM, u8 *buffer, u16 bufLen, USART_callBackFuncPtr_t cb)
+/**
+ * @brief    : Transmits a single byte over USART.
+ * @param[in]: Ptr_UserReq Pointer to USART user request structure containing transmit parameters.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the transmission.
+ * @details  : This function transmits a single byte of data over USART.
+ *             It checks for NULL pointer input and the length of the transmit buffer.
+ *             If the USART transmit request is ready, it sets the request state to busy,
+ *             transmits the byte of data, and waits for the transmission to complete.
+ **/
+Error_enumStatus_t USART_SendByte(USART_UserReq_t *Ptr_UserReq)
 {
-    USART_errorState_t errorState = USART_Nok;
-    volatile USART_registers_t *const USART = USARTs[UART_NUM];
-    if(buffer == NULLPTR || cb == NULLPTR)
+    /* Local Variable to store error status */
+    Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
+    uint8_t Loc_Reqidx = 0;
+    /* Check for NULL pointer */
+    if (Ptr_UserReq == NULL)
     {
-        errorState = USART_NullPtr;
+        Loc_enumReturnStatus = Status_enumNULLPointer;
     }
-    else if(IS_NOT_USART_OPTION(UART_NUM))
+    else if (Ptr_UserReq->Buff_Len > 1)
     {
-        errorState = USART_InvalidParamter;
-    }
-    else if(TXs[UART_NUM].state == USART_Busy)
-    {
-        errorState = USART_TxFailed;
+        Loc_enumReturnStatus = Status_enumWrongInput;
     }
     else
     {
-        TXs[UART_NUM].state = USART_Busy;
-        TXs[UART_NUM].cbf = cb;
-        TXs[UART_NUM].buffer->data = buffer;
-        TXs[UART_NUM].buffer->size = bufLen;
-        TXs[UART_NUM].buffer->currPos = 0;
-        USART->CR1 |= USART_TXEIE_ENABLE;
-        USART->DR = TXs[UART_NUM].buffer->data[0];
-        TXs[UART_NUM].buffer->currPos = 1;
-        errorState = USART_Ok;
+        switch (Ptr_UserReq->USART_ID)
+        {
+        case USART1_ID:
+            Loc_Reqidx = g_UART1_idx;
+            break;
+        case USART2_ID:
+            Loc_Reqidx = g_UART2_idx;
+            break;
+        case USART6_ID:
+            Loc_Reqidx = g_UART6_idx;
+            break;
+        default:
+            Loc_enumReturnStatus = Status_enumNotOk;
+            break;
+        }
+        if (TxReq[Loc_Reqidx].state == USART_ReqReady)
+        {
+            volatile uint16_t Time = 2000;
+            /* Set transmit request state to busy */
+            TxReq[Loc_Reqidx].state = USART_ReqBusy;
+            /* Transmit the byte of data */
+            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_DR = *(Ptr_UserReq->Ptr_buffer);
+            /* Enable USART transmit */
+            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 |= UART_TX_ENABLE_MASK;
+            /* Wait for transmission to complete */
+            while ((((((USART_PERI_t *)USART[Loc_Reqidx])->USART_SR) & (UART_TX_EMPTY_FLAG)) == 0) && Time)
+            {
+                Time--;
+            }
+            if (Time == 0)
+            {
+                if (((((USART_PERI_t *)USART[Loc_Reqidx])->USART_SR) & UART_TX_EMPTY_FLAG) == 0)
+                {
+                    Loc_enumReturnStatus = Status_enumTimOut;
+                }
+            }
+            /* Set transmit request state back to ready */
+            TxReq[Loc_Reqidx].state = USART_ReqReady;
+        }
+        else
+        {
+            Loc_enumReturnStatus = Status_enumBusyState;
+        }
     }
-
-    return errorState;
+    /* Return the status of the transmission */
+    return Loc_enumReturnStatus;
 }
 
-USART_errorState_t USART_recieveBufferAsync(u8 UART_NUM, u8 *buffer, u16 bufLen, USART_callBackFuncPtr_t cb)
+/**
+ * @brief    : Receives a single byte over USART.
+ * @param[in]: Ptr_UserReq Pointer to USART user request structure containing receive parameters.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the reception.
+ * @details  : This function receives a single byte of data over USART.
+ *             It checks for NULL pointer input and the length of the receive buffer.
+ *             If the USART receive request is ready, it sets the request state to busy,
+ *             enables USART receive, waits for a byte of data to be received, and reads the received byte.
+ **/
+Error_enumStatus_t USART_GetByte(USART_UserReq_t *Ptr_UserReq)
 {
-    USART_errorState_t errorState = USART_Nok;
-    volatile USART_registers_t *const USART = USARTs[UART_NUM];
-    if(buffer == NULLPTR || cb == NULLPTR)
+    /* Local Variable to store error status */
+    Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
+    uint8_t Loc_Reqidx =0 ;
+    /* Check for NULL pointer */
+    if (Ptr_UserReq == NULL)
     {
-        errorState = USART_NullPtr;
+        Loc_enumReturnStatus = Status_enumNULLPointer;
     }
-    else if(IS_NOT_USART_OPTION(UART_NUM))
+    else if (Ptr_UserReq->Buff_Len > 1)
     {
-        errorState = USART_InvalidParamter;
-    }
-    else if(RXs[UART_NUM].state == USART_Busy)
-    {
-        errorState = USART_RxFailed;
+        Loc_enumReturnStatus = Status_enumWrongInput;
     }
     else
     {
-        RXs[UART_NUM].state = USART_Busy;
-        RXs[UART_NUM].cbf = cb;
-        RXs[UART_NUM].buffer->data = buffer;
-        RXs[UART_NUM].buffer->size = bufLen;
-        RXs[UART_NUM].buffer->currPos = 0;
-        RXs[UART_NUM].buffer->data[0] = USART->DR;
-        RXs[UART_NUM].buffer->currPos = 1;;
-        USART->SR &= ~(USART_SR_RXNE_Msk);
-        USART->CR1 |= USART_RXNEIE_ENABLE;
-        errorState = USART_Ok;
+        switch (Ptr_UserReq->USART_ID)
+        {
+        case USART1_ID:
+            Loc_Reqidx = g_UART1_idx;
+            break;
+        case USART2_ID:
+            Loc_Reqidx = g_UART2_idx;
+            break;
+        case USART6_ID:
+            Loc_Reqidx = g_UART6_idx;
+            break;
+        default:
+            Loc_enumReturnStatus = Status_enumNotOk;
+            break;
+        }
+        if (RxReq[Loc_Reqidx].state == USART_ReqReady)
+        {
+            volatile uint16_t Time = 2000;
+            /* Set receive request state to busy */
+            RxReq[Loc_Reqidx].state = USART_ReqBusy;
+            /* Enable USART receive */
+            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 |= UART_RX_ENABLE_MASK;
+            /* Wait for a byte of data to be received */
+            while ((((((USART_PERI_t *)USART[Loc_Reqidx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG) == 0) && Time)
+            {
+                Time--;
+            }
+            if (Time == 0)
+            {
+                if (((((USART_PERI_t *)USART[Loc_Reqidx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG) == 0)
+                {
+                    Loc_enumReturnStatus = Status_enumTimOut;
+                }
+                else
+                {
+                    /* Read the received byte */
+                    *(Ptr_UserReq->Ptr_buffer) = ((USART_PERI_t *)USART[Loc_Reqidx])->USART_DR;
+                }
+            }
+            else
+            {
+                /* Read the received byte */
+                *(Ptr_UserReq->Ptr_buffer) = ((USART_PERI_t *)USART[Loc_Reqidx])->USART_DR;
+            }
+            /* Disable USART receive */
+            ((USART_PERI_t *)USART[Loc_Reqidx])->USART_CR1 &= ~UART_RX_ENABLE_MASK;
+            /* Set receive request state back to ready */
+            RxReq[Loc_Reqidx].state = USART_ReqReady;
+        }
+        else
+        {
+            Loc_enumReturnStatus = Status_enumBusyState;
+        }
     }
-    return errorState;
+    /* Return the status of the reception */
+    return Loc_enumReturnStatus;
 }
 
+/**
+ * @brief    : Checks if USART transmission is completed.
+ * @param[in]: USART_ID   USART ID.
+ * @param[out]: Ptr_Status Pointer to a variable to store the status of transmission completion.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the operation.
+ * @details  : This function checks if the transmission over the specified USART is completed.
+ *             It reads the USART status register to determine the transmission status.
+ **/
+Error_enumStatus_t USART_TxDone(uint8_t USART_ID, uint8_t *Ptr_Status)
+{
+    /* Local Variable to store error status */
+    Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
+    uint8_t Loc_Reqidx = 0;
+    /* Check for NULL pointer */
+    if (Ptr_Status == NULL)
+    {
+        Loc_enumReturnStatus = Status_enumNULLPointer;
+    }
+    else
+    {
+        switch (USART_ID)
+        {
+        case USART1_ID:
+            Loc_Reqidx = g_UART1_idx;
+            break;
+        case USART2_ID:
+            Loc_Reqidx = g_UART2_idx;
+            break;
+        case USART6_ID:
+            Loc_Reqidx = g_UART6_idx;
+            break;
+        default:
+            Loc_enumReturnStatus = Status_enumNotOk;
+            break;
+        }
+        /* Check if transmission is completed */
+        if ((((((USART_PERI_t *)USART[Loc_Reqidx])->USART_SR) & UART_TX_DONE_FLAG) != 0))
+        {
+            *Ptr_Status = Done;
+        }
+        else
+        {
+            *Ptr_Status = NOT_Done;
+        }
+    }
+
+    /* Return the status of the operation */
+    return Loc_enumReturnStatus;
+}
+
+/**
+ * @brief    : Checks if USART is ready to receive data.
+ * @param[in]: USART_ID   USART ID.
+ * @param[out]: Ptr_Status Pointer to a variable to store the status of USART reception.
+ * @return   : Error_enumStatus_t Error status indicating the success or failure of the operation.
+ * @details  : This function checks if the specified USART is ready to receive data.
+ *             It reads the USART status register to determine the reception status.
+ **/
+Error_enumStatus_t USART_IsRx(uint8_t USART_ID, uint8_t *Ptr_Status)
+{
+    /* Local Variable to store error status */
+    Error_enumStatus_t Loc_enumReturnStatus = Status_enumOk;
+    uint8_t Loc_Reqidx = 0;
+    /* Check for NULL pointer */
+    if (Ptr_Status == NULL)
+    {
+        Loc_enumReturnStatus = Status_enumNULLPointer;
+    }
+    else
+    {
+        switch (USART_ID)
+        {
+        case USART1_ID:
+            Loc_Reqidx = g_UART1_idx;
+            break;
+        case USART2_ID:
+            Loc_Reqidx = g_UART2_idx;
+            break;
+        case USART6_ID:
+            Loc_Reqidx = g_UART6_idx;
+            break;
+        default:
+            Loc_enumReturnStatus = Status_enumNotOk;
+            break;
+        }
+        /* Check if USART is ready to receive data */
+        if ((((((USART_PERI_t *)USART[Loc_Reqidx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG) != 0))
+        {
+            *Ptr_Status = Done;
+        }
+        else
+        {
+            *Ptr_Status = NOT_Done;
+        }
+    }
+
+    /* Return the status of the operation */
+    return Loc_enumReturnStatus;
+}
+
+/**
+ * @brief    : USART1 interrupt handler.
+ * @details  : This function handles the USART1 interrupt.
+ *             It checks if the transmission or reception is complete and performs the necessary actions.
+ **/
 void USART1_IRQHandler(void)
 {
-    volatile USART_registers_t *const USART = (volatile USART_registers_t*) USARTs[USART1];
-    if(USARTs[USART1]->SR & USART_SR_TXE_Msk)
+    /* Local Variable to store CR1 value */
+    uint32_t Lo_CR1_Value = ((USART_PERI_t *)USART[g_UART1_idx])->USART_CR1;
+
+    /* Check if USART transmission is empty */
+    if ((((USART_PERI_t *)USART[g_UART1_idx])->USART_SR) & UART_TX_EMPTY_FLAG)
     {
-        if(TXs[USART1].buffer->currPos < TXs[USART1].buffer->size)
+        /* Check if there are more bytes to transmit */
+        if ((TxReq[g_UART1_idx].buffer.Pos) < (TxReq[g_UART1_idx].buffer.size))
         {
-            USART->DR = TXs[USART1].buffer->data[TXs[USART1].buffer->currPos];
-            TXs[USART1].buffer->currPos++;
+            /* Transmit the next byte */
+            ((USART_PERI_t *)USART[g_UART1_idx])->USART_DR = TxReq[g_UART1_idx].buffer.data[TxReq[g_UART1_idx].buffer.Pos];
+            TxReq[g_UART1_idx].buffer.Pos++;
         }
         else
         {
-            USART->CR1 &= ~(USART_TXEIE_ENABLE);
-            TXs[USART1].state = USART_Ready;
-            if(TXs[USART1].cbf)
+            /* Disable TXE interrupt */
+            Lo_CR1_Value &= ~(UART_TXE_ENABLE_MASK);
+            TxReq[g_UART1_idx].state = USART_ReqReady;
+            ((USART_PERI_t *)USART[g_UART1_idx])->USART_CR1 = Lo_CR1_Value;
+            /* Call callback function if available */
+            if (TxReq[g_UART1_idx].CB)
             {
-                TXs[USART1].cbf();
+                TxReq[g_UART1_idx].CB();
             }
-        }   
+        }
     }
-
-    if(USARTs[USART1]->SR & USART_SR_RXNE_Msk)
+    /* Check if USART reception is not empty */
+    if ((((USART_PERI_t *)USART[g_UART1_idx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG)
     {
-        if(RXs[USART1].buffer->currPos < RXs[USART1].buffer->size)
+        /* Check if there are more bytes to receive */
+        if (RxReq[g_UART1_idx].buffer.Pos < RxReq[g_UART1_idx].buffer.size)
         {
-            RXs[USART1].buffer->data[RXs[USART1].buffer->currPos] = USART->DR;
-            RXs[USART1].buffer->currPos++;
-            if(RXs[USART1].buffer->currPos == RXs[USART1].buffer->size)
+            /* Receive the next byte */
+            RxReq[g_UART1_idx].buffer.data[RxReq[g_UART1_idx].buffer.Pos] = ((USART_PERI_t *)USART[g_UART1_idx])->USART_DR;
+            RxReq[g_UART1_idx].buffer.Pos++;
+            /* Check if all bytes are received */
+            if (RxReq[g_UART1_idx].buffer.Pos == RxReq[g_UART1_idx].buffer.size)
             {
-                USART->CR1 &= ~(USART_RXNEIE_ENABLE);
-                //RXs[1].buffer->data = NULLPTR;
-                RXs[USART1].state = USART_Ready;
-                if(RXs[USART1].cbf)
+                RxReq[g_UART1_idx].state = USART_ReqReady;
+                RxReq[g_UART1_idx].buffer.Pos =0 ;
+                /* Disable RXE interrupt */
+                //((USART_PERI_t *)USART[g_UART1_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
+                /* Call callback function if available */
+                if (RxReq[g_UART1_idx].CB)
                 {
-                    RXs[USART1].cbf();
+                    RxReq[g_UART1_idx].CB();
                 }
             }
         }
     }
 }
 
+/**
+ * @brief    : USART2 interrupt handler.
+ * @details  : This function handles the USART2 interrupt.
+ *             It checks if the transmission or reception is complete and performs the necessary actions.
+ **/
 void USART2_IRQHandler(void)
 {
-    volatile USART_registers_t *const USART = (volatile USART_registers_t*) USARTs[USART2];
-    if(USARTs[USART2]->SR & USART_SR_TXE_Msk)
+    /* Local Variable to store CR1 value */
+    uint32_t Lo_CR1_Value = ((USART_PERI_t *)USART[g_UART2_idx])->USART_CR1;
+
+    /* Check if USART transmission is empty */
+    if ((((USART_PERI_t *)USART[g_UART2_idx])->USART_SR) & UART_TX_EMPTY_FLAG)
     {
-        if(TXs[USART2].buffer->currPos < TXs[USART2].buffer->size)
+        /* Check if there are more bytes to transmit */
+        if ((TxReq[g_UART2_idx].buffer.Pos) < (TxReq[g_UART2_idx].buffer.size))
         {
-            USART->DR = TXs[USART2].buffer->data[TXs[USART2].buffer->currPos];
-            TXs[USART2].buffer->currPos++;
+            /* Transmit the next byte */
+            ((USART_PERI_t *)USART[g_UART2_idx])->USART_DR = TxReq[g_UART2_idx].buffer.data[TxReq[g_UART2_idx].buffer.Pos];
+            TxReq[g_UART2_idx].buffer.Pos++;
         }
         else
         {
-            USART->CR1 &= ~(USART_TXEIE_ENABLE);
-            TXs[USART2].state = USART_Ready;
-            if(TXs[USART2].cbf)
+            /* Disable TXE interrupt */
+            Lo_CR1_Value &= ~(UART_TXE_ENABLE_MASK);
+            TxReq[g_UART2_idx].state = USART_ReqReady;
+            ((USART_PERI_t *)USART[g_UART2_idx])->USART_CR1 = Lo_CR1_Value;
+            /* Call callback function if available */
+            if (TxReq[g_UART2_idx].CB)
             {
-                TXs[USART2].cbf();
+                TxReq[g_UART2_idx].CB();
             }
-        }   
+        }
     }
-
-    if(USARTs[USART2]->SR & USART_SR_RXNE_Msk)
+    /* Check if USART reception is not empty */
+    if ((((USART_PERI_t *)USART[g_UART2_idx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG)
     {
-        if(RXs[USART2].buffer->currPos < RXs[USART2].buffer->size)
+        /* Check if there are more bytes to receive */
+        if (RxReq[g_UART2_idx].buffer.Pos < RxReq[g_UART2_idx].buffer.size)
         {
-            RXs[USART2].buffer->data[RXs[USART2].buffer->currPos] = USART->DR;
-            RXs[USART2].buffer->currPos++;
-            if(RXs[USART2].buffer->currPos == RXs[USART2].buffer->size)
+            /* Receive the next byte */
+            RxReq[g_UART2_idx].buffer.data[RxReq[g_UART2_idx].buffer.Pos] = ((USART_PERI_t *)USART[g_UART2_idx])->USART_DR;
+            RxReq[g_UART2_idx].buffer.Pos++;
+            /* Check if all bytes are received */
+            if (RxReq[g_UART2_idx].buffer.Pos == RxReq[g_UART2_idx].buffer.size)
             {
-                USART->CR1 &= ~(USART_RXNEIE_ENABLE);
-                //RXs[1].buffer->data = NULLPTR;
-                RXs[USART2].state = USART_Ready;
-                if(RXs[USART2].cbf)
+                RxReq[g_UART2_idx].state = USART_ReqReady;
+                RxReq[g_UART2_idx].buffer.Pos = 0 ;
+                /* Disable RXE interrupt */
+                //((USART_PERI_t *)USART[g_UART2_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
+                /* Call callback function if available */
+                if (RxReq[g_UART2_idx].CB)
                 {
-                    RXs[USART2].cbf();
+                    RxReq[g_UART2_idx].CB();
                 }
             }
         }
     }
 }
 
+/**
+ * @brief    : USART6 interrupt handler.
+ * @details  : This function handles the USART6 interrupt.
+ *             It checks if the transmission or reception is complete and performs the necessary actions.
+ **/
 void USART6_IRQHandler(void)
 {
-    volatile USART_registers_t *const USART = (volatile USART_registers_t*) USARTs[USART6];
-    if(USARTs[USART6]->SR & USART_SR_TXE_Msk)
+    /* Local Variable to store CR1 value */
+    uint32_t Lo_CR1_Value = ((USART_PERI_t *)USART[g_UART6_idx])->USART_CR1;
+
+    /* Check if USART transmission is empty */
+    if ((((USART_PERI_t *)USART[g_UART6_idx])->USART_SR) & UART_TX_EMPTY_FLAG)
     {
-        if(TXs[USART6].buffer->currPos < TXs[USART6].buffer->size)
+        /* Check if there are more bytes to transmit */
+        if ((TxReq[g_UART6_idx].buffer.Pos) < (TxReq[g_UART6_idx].buffer.size))
         {
-            USART->DR = TXs[USART6].buffer->data[TXs[USART6].buffer->currPos];
-            TXs[USART6].buffer->currPos++;
+            /* Transmit the next byte */
+            ((USART_PERI_t *)USART[g_UART6_idx])->USART_DR = TxReq[g_UART6_idx].buffer.data[TxReq[g_UART6_idx].buffer.Pos];
+            TxReq[g_UART6_idx].buffer.Pos++;
         }
         else
         {
-            USART->CR1 &= ~(USART_TXEIE_ENABLE);
-            TXs[USART6].state = USART_Ready;
-            if(TXs[USART6].cbf)
+            /* Disable TXE interrupt */
+            Lo_CR1_Value &= ~(UART_TXE_ENABLE_MASK);
+            TxReq[g_UART6_idx].state = USART_ReqReady;
+            ((USART_PERI_t *)USART[g_UART6_idx])->USART_CR1 = Lo_CR1_Value;
+            /* Call callback function if available */
+            if (TxReq[g_UART6_idx].CB)
             {
-                TXs[USART6].cbf();
+                TxReq[g_UART6_idx].CB();
             }
-        }   
+        }
     }
-
-    if(USARTs[USART6]->SR & USART_SR_RXNE_Msk)
+    /* Check if USART reception is not empty */
+    if ((((USART_PERI_t *)USART[g_UART6_idx])->USART_SR) & UART_RX_NOT_EMPTY_FLAG)
     {
-        if(RXs[USART6].buffer->currPos < RXs[USART6].buffer->size)
+        /* Check if there are more bytes to receive */
+        if (RxReq[g_UART6_idx].buffer.Pos < RxReq[g_UART6_idx].buffer.size)
         {
-            RXs[USART6].buffer->data[RXs[USART6].buffer->currPos] = USART->DR;
-            RXs[USART6].buffer->currPos++;
-            if(RXs[USART6].buffer->currPos == RXs[USART6].buffer->size)
+            /* Receive the next byte */
+            RxReq[g_UART6_idx].buffer.data[RxReq[g_UART6_idx].buffer.Pos] = ((USART_PERI_t *)USART[g_UART6_idx])->USART_DR;
+            RxReq[g_UART6_idx].buffer.Pos++;
+            /* Check if all bytes are received */
+            if (RxReq[g_UART6_idx].buffer.Pos == RxReq[g_UART6_idx].buffer.size)
             {
-                USART->CR1 &= ~(USART_RXNEIE_ENABLE);
-                //RXs[1].buffer->data = NULLPTR;
-                RXs[USART6].state = USART_Ready;
-                if(RXs[USART6].cbf)
+                RxReq[g_UART6_idx].state = USART_ReqReady;
+                RxReq[g_UART6_idx].buffer.Pos =0 ;
+                /* Disable RXE interrupt */
+                //((USART_PERI_t *)USART[g_UART6_idx])->USART_CR1 &= ~UART_RXE_ENABLE_MASK;
+                /* Call callback function if available */
+                if (RxReq[g_UART6_idx].CB)
                 {
-                    RXs[USART6].cbf();
+                    RxReq[g_UART6_idx].CB();
                 }
             }
         }
