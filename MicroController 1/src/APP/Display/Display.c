@@ -62,8 +62,8 @@ static CursorPos_t currentCurPos = {.row = 0, .col = 0};
 static BlinkChar_t BlinkingChar = {
     .isBlinking = 0,
     .charPos = {0, 0},
-    .blinkRateMS = 500,
-    .blinkTimerMS = 500,
+    .blinkRateMS = 250,
+    .blinkTimerMS = 250,
 }; 
 /********************************************************************************************************/
 /*****************************************Static Functions Prototype*************************************/
