@@ -98,6 +98,8 @@ Write_Req_t Write_Req;
 Clear_Req_t Clear_Req;
 Number_Req_t Number_Req;
 
+void *Arr_Port[3] = {((void*)0x40020000), ((void*)0x40020400), ((void*)0x40020800)};
+
 /*Static Functions APIs*/
 static void LCD_Send_Data(LCD_Modules_t LCD_Name ,u8 Data);
 static void LCD_Send_Command(LCD_Modules_t LCD_Name, u8 Command);
@@ -420,22 +422,22 @@ static void LCD_Send_Number(LCD_Modules_t LCD_Name ,u8 Data)
 
         for (u8 Counter1 = LCD_DB0; Counter1 < LCD_Pins_Num; ++Counter1)
         { 
-            GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Pin, ((Data >> Counter2++) & 1UL ) );
+            GPIO_setPin(Arr_Port[LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Port], LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Pin, ((Data >> Counter2++) & 1UL ));
         } 
         
     /*RS=1*/
-    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Pin, GPIO_PIN_ON);
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Pin, GPIO_SET_STATE);
     /*RW=0*/
-    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Pin, GPIO_PIN_OFF);
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Pin, GPIO_RESET_STATE);
     /*E=1*/
-    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_PIN_ON);
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_SET_STATE);
 
     }
     
     else
     {
         /*E=0*/
-        GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_PIN_OFF);
+        GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_RESET_STATE);
     }
     
 }
@@ -451,22 +453,22 @@ static void LCD_Send_Data(LCD_Modules_t LCD_Name ,u8 Data)
 
         for (u8 Counter1 = LCD_DB0; Counter1 < LCD_Pins_Num; ++Counter1)
         { 
-            GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Pin, ((Data >> Counter2++) & 1UL ) );
+            GPIO_setPin(Arr_Port[LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Port], LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Pin, ((Data >> Counter2++) & 1UL ));
         } 
         
     /*RS=1*/
-    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Pin, GPIO_PIN_ON);
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Pin, GPIO_SET_STATE);
     /*RW=0*/
-    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Pin, GPIO_PIN_OFF);
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Pin, GPIO_RESET_STATE);
     /*E=1*/
-    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_PIN_ON);
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_RESET_STATE);
 
     }
     
     else
     {
         /*E=0*/
-        GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_PIN_OFF);
+        GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_RESET_STATE);
         
         ++Write_Req.String_Counter;
         --Write_Req.String_Len;
@@ -483,21 +485,21 @@ static void LCD_Send_Command(LCD_Modules_t LCD_Name, u8 Command)
     {
         for (u8 Counter1 = LCD_DB0; Counter1 < LCD_Pins_Num; ++Counter1)
         { 
-            GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Pin, ((Command >> Counter2++) & 1 ) );
+             GPIO_setPin(Arr_Port[LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Port], LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Pin, ((Command >> Counter2++) & 1UL ));
         } 
         
     /*RS=0*/
-    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Pin, GPIO_PIN_OFF);
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Pin, GPIO_RESET_STATE);
     /*RW=0*/
-    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Pin, GPIO_PIN_OFF);
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Pin, GPIO_RESET_STATE);
     /*E=1*/
-    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_PIN_ON);
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_SET_STATE);
 
     }
     else if (Time_mS > 1)
     {
         /*E=0*/
-        GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_PIN_OFF);
+        GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_RESET_STATE);
     }
 
     }
@@ -507,10 +509,10 @@ static void LCD_Pins_Init(void)
 {
     u8 Counter1 = 0, Counter2 = 0;
 
-    GPIO_Pin_Confg_t LCD_Pin;
+    GPIO_pinConfig_t LCD_Pin;
 
-    LCD_Pin.mode  = GPIO_CONFG_OUTPUT_PP;
-    LCD_Pin.speed = GPIO_PIN_MID_SPEED;
+    LCD_Pin.mode  = GPIO_MODE_OUTPUT_PUSHPULL_NOPULL;
+    LCD_Pin.speed = GPIO_MEDIUM_SPEED;
 
     for(Counter1 = 0; Counter1<LCD_Num; ++Counter1)
     {
@@ -519,7 +521,8 @@ static void LCD_Pins_Init(void)
             LCD_Pin.port = LCD_Pins_Arr[Counter1].LCD_arr[Counter2].Port;
             LCD_Pin.pin  = LCD_Pins_Arr[Counter1].LCD_arr[Counter2].Pin;
 
-            GPIO_Init_Pin(&LCD_Pin);
+            
+            GPIO_initPin(&LCD_Pin);
         }
     }
 }

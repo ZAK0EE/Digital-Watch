@@ -43,6 +43,8 @@ typedef struct
     u8 Pin;     // Pin number
 } LCD_Pins_Connection_t;
 
+
+
 /* LCD Module pins */
 typedef enum
 {
