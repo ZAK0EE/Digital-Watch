@@ -32,7 +32,7 @@
 typedef enum
 {
     LCD1,
-    LCD2,
+
     LCD_Num,
 } LCD_Modules_t;
 

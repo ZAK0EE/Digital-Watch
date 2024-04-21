@@ -3,6 +3,13 @@
 
 #include "LCD_Confg.h"    // Include necessary configuration header file
 
+typedef enum
+{
+    LCD_Ready,
+    LCD_Busy,
+
+}LCD_State_t;
+
 // Function prototypes
 
 /**
@@ -28,5 +35,10 @@ void LCD_Set_Cursor_Async(LCD_Modules_t LCD_Name, u8 Row, u8 Col);
  * @param string: Pointer to the string to be written.
  */
 void LCD_Write_String_Async(LCD_Modules_t LCD_Name, const char *string);
+
+
+u8 LCD_Get_State(void);
+
+void LCD_Write_NUM(LCD_Modules_t LCD_Name, u8 Number);
 
 #endif /*LCD_H_*/    // End of header guard

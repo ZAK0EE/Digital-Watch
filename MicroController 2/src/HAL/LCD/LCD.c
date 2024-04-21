@@ -1,16 +1,16 @@
 #include "HAL/LCD/LCD_Confg.h"
 #include "MCAL/GPIO/GPIO.h"
-#include "SVC/Scheduler/Runnables.h"
+//#include "SVC/Scheduler/Runnables.h"
 
-#define DISPLAY_ON_CURSOR_OFF       0x0cUL          // display on, cursor off, don't blink character
-#define DISPLAY_ON_CURSOR_ON        0x0eUL          // display on, cursor on, don't blink character
+#define DISPLAY_ON_CURSOR_OFF       0x0CUL          // display on, cursor off, don't blink character
+#define DISPLAY_ON_CURSOR_ON        0x0EUL          // display on, cursor on, don't blink character
 #define DISPLAY_OFF_CURSOR_OFF      0x08UL          // turn display off
 #define CLEAR_DISPLAY               0x01UL          //replace all characters with ASCII 'space'
 #define ENTRY_MODE                  0x06UL          // shift cursor from left to right on read/write
 #define HOME                        0x02UL          // return cursor to first position on first line
 #define CGRAM                       0x40UL          // the first Place/Address at CGRAM
 #define SET_CURSOR                  0x80UL          // set cursor position
-#define FUNCTION_SET                0x30UL          // reset the LCD
+#define FUNCTION_SET                0x38UL          // reset the LCD
 
 
 typedef enum
@@ -39,6 +39,7 @@ typedef enum
     Write,
     Set_Cursor,
     Clear,
+    Write_Number,
 
 }Operating_Process_t;
 
@@ -65,6 +66,12 @@ typedef struct
 
 }Write_Req_t;
 
+typedef struct 
+{
+    u8 Number;
+    u8 LCD_Name;
+}Number_Req_t;
+
 
 typedef struct
 {
@@ -89,6 +96,7 @@ User_Req_t User_Req;
 Set_Cursor_t Set_Cursor_Req;
 Write_Req_t Write_Req;
 Clear_Req_t Clear_Req;
+Number_Req_t Number_Req;
 
 /*Static Functions APIs*/
 static void LCD_Send_Data(LCD_Modules_t LCD_Name ,u8 Data);
@@ -100,6 +108,8 @@ static void LCD_Set_Cursor_Proc(void);
 static void LCD_Write_Proc(void);
 static u32 Calc_string_Len(const char *string);
 static void LCD_Operate(void);
+static void LCD_Write_Number_Proc(void);
+static void LCD_Send_Number(LCD_Modules_t LCD_Name ,u8 Data);
 
 void LCD_Task(void)
 {
@@ -126,7 +136,7 @@ void LCD_Task(void)
 static void LCD_Init_SM(void)
 {
     
-    Time_mS += SCHED_PERODICITY_MS;
+    Time_mS += 1;
 
     switch (Init_State)
     {
@@ -163,14 +173,14 @@ static void LCD_Init_SM(void)
         {
         for (u8 Counter = 0; Counter < LCD_Num; ++Counter)
         {
-            LCD_Send_Command(Counter, DISPLAY_ON_CURSOR_ON);
+            LCD_Send_Command(Counter, 0x0f);
         }
         }
         else if (Time_mS > 1)
         {
             for (u8 Counter = 0; Counter < LCD_Num; ++Counter)
         {
-            LCD_Send_Command(Counter, DISPLAY_ON_CURSOR_ON);
+            LCD_Send_Command(Counter, 0x0f);
         }
             Init_State = Display_Clear;
             Time_mS = 0;
@@ -229,7 +239,7 @@ static void LCD_Init_SM(void)
 
 static void LCD_Operate(void)
 {
-    Time_mS += SCHED_PERODICITY_MS;
+    Time_mS += 1;
 
     switch (User_Req.Type)
     {
@@ -241,6 +251,7 @@ static void LCD_Operate(void)
         else
         {
             User_Req.State = Ready;
+            User_Req.Type=LCD_Default;
             Write_Req.String_Counter = 0;
             Write_Req.String_Len = 0; 
             Time_mS = 0;
@@ -256,6 +267,7 @@ static void LCD_Operate(void)
         {
             LCD_Set_Cursor_Proc();
             User_Req.State = Ready;
+            User_Req.Type=LCD_Default;
             Time_mS = 0;
         }
         break;
@@ -272,10 +284,24 @@ static void LCD_Operate(void)
         else if (Time_mS == 4)
         {
             User_Req.State = Ready;
+            User_Req.Type=LCD_Default;
             Time_mS = 0;
         }
         break;
-
+    case Write_Number:
+        if (Time_mS == 1)
+        {
+            LCD_Write_Number_Proc();
+        }
+        else if (Time_mS == 2)
+        {
+            LCD_Write_Number_Proc();
+            User_Req.State = Ready;
+            User_Req.Type=LCD_Default;
+            Time_mS = 0;
+        }
+        break;
+        
     default:
     Time_mS = 0;
         break;
@@ -319,7 +345,8 @@ void LCD_Set_Cursor_Async(LCD_Modules_t LCD_Name ,u8 Row, u8 Col)
 static void LCD_Set_Cursor_Proc(void)
 {
     u8 Temp = 0;
-
+    if(Time_mS==1)
+    {
     if (Set_Cursor_Req.Row<1 || Set_Cursor_Req.Row>2 || Set_Cursor_Req.Col<1 || Set_Cursor_Req.Col>16)
     {
         Temp = SET_CURSOR;
@@ -330,7 +357,8 @@ static void LCD_Set_Cursor_Proc(void)
     }
     else if (Set_Cursor_Req.Row == 2)
     {
-        Temp = SET_CURSOR + 64 + (Set_Cursor_Req.Col-1);
+        Temp = (SET_CURSOR + 0x40) + (Set_Cursor_Req.Col-1);
+    }
     }
 
     LCD_Send_Command(Set_Cursor_Req.LCD_Name, Temp);
@@ -357,6 +385,59 @@ void LCD_Write_String_Async(LCD_Modules_t LCD_Name ,const char *string)
 static void LCD_Write_Proc(void)
 {
     LCD_Send_Data(Write_Req.LCD_Name, Write_Req.string[Write_Req.String_Counter]);
+}
+
+
+void LCD_Write_NUM(LCD_Modules_t LCD_Name, u8 Number)
+{
+    if (LCD_State == LCD_Operating && User_Req.State == Ready)
+    {
+        User_Req.State      = Busy;
+        User_Req.Type       = Write_Number;
+
+        Number_Req.Number = Number;
+        Number_Req.LCD_Name = LCD_Name;
+    }
+}
+
+static void LCD_Write_Number_Proc(void)
+{
+    LCD_Send_Number(Number_Req.LCD_Name, Number_Req.Number+48);
+}
+
+u8 LCD_Get_State(void)
+{
+    return User_Req.State;
+}
+
+
+static void LCD_Send_Number(LCD_Modules_t LCD_Name ,u8 Data)
+{
+    u8 Counter2 = 0;
+
+    if (Time_mS==1)
+    {
+
+        for (u8 Counter1 = LCD_DB0; Counter1 < LCD_Pins_Num; ++Counter1)
+        { 
+            GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[Counter1].Pin, ((Data >> Counter2++) & 1UL ) );
+        } 
+        
+    /*RS=1*/
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RS].Pin, GPIO_PIN_ON);
+    /*RW=0*/
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_RW].Pin, GPIO_PIN_OFF);
+    /*E=1*/
+    GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_PIN_ON);
+
+    }
+    
+    else
+    {
+        /*E=0*/
+        GPIO_Set_Pin_State(LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Port, LCD_Pins_Arr[LCD_Name].LCD_arr[LCD_E].Pin, GPIO_PIN_OFF);
+    }
+    
 }
 
 
