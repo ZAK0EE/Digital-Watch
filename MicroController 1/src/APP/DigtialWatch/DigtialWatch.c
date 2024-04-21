@@ -118,7 +118,7 @@ void DW_Runnable(void)
         {
             Current_Operation_Mode = DW_Mode_Reset;
         }
-        if ((Clock_Prev_State != DW_Mode_Clock_Edit) && (Mode_switch_status == BUTTON_IS_PRESSED))
+        if ((Clock_Prev_State != DW_Mode_Clock_Edit) && (Mode_switch_status == BUTTON_IS_PRESSED) && Edit_switch_status == BUTTON_IS_NOT_PRESSED) 
         {
 
             Current_Operation_Mode = DW_Mode_StopWatch;
@@ -133,7 +133,7 @@ void DW_Runnable(void)
         {
             Current_Operation_Mode = DW_Mode_Reset;
         }
-        if ((Mode_switch_status == BUTTON_IS_PRESSED))
+        if ((Mode_switch_status == BUTTON_IS_PRESSED) && Edit_switch_status == BUTTON_IS_NOT_PRESSED)
         {
             Current_Operation_Mode = DW_Mode_Clock;
             Display_clearScreenAsync();
@@ -392,12 +392,12 @@ static void DW_StopWatch_Modes(void)
         Display_printCenteredAsync(buff, len);
 
         /* Switch to operation mode if edit switch is pressed */
-        if (Edit_switch_status == BUTTON_IS_PRESSED)
+        if (Edit_switch_status == BUTTON_IS_PRESSED && Mode_switch_status == BUTTON_IS_NOT_PRESSED)
         {
             // Current_StopWatch_Mode = DW_Mode_StopWatch_Operation;
             StopWatch_Start_Stop++;
             Current_StopWatch_Mode = StopWatch_Start_Stop;
-            if (Current_StopWatch_Mode == DW_Mode_StopWatch_Pause)
+            if (Current_StopWatch_Mode == DW_Mode_StopWatch_Pause )
             {
                 StopWatch_pause();
                 Current_StopWatch_Mode = DW_Mode_StopWatch_Show;
