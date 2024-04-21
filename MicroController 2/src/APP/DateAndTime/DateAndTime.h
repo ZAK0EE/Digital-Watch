@@ -18,32 +18,48 @@
 /********************************************************************************************************/
 
 // Structure definition for time
-typedef struct {
-    u8 hours;      // Hours (0-23)
-    u8 minutes;    // Minutes (0-59)
-    u8 seconds;    // Seconds (0-59)
-    u8 milliseconds; // Milliseconds (0-99)
-} Time;
+typedef struct
+{
+    // H1H2 : M1M2 : S1S2
+    u8 H1;
+    u8 H2;
+    u8 M1;
+    u8 M2;
+    u8 S1;
+    u8 S2;
+} Time_t;
 
 // Structure definition for date
-typedef struct {
-    u8 day;        // Day of the month (1-31)
-    u8 month;      // Month (1-12)
-    u16 year;      // Year
-} Date;
+typedef struct
+{
+    // D1D2 : M1M2 : Y1Y2Y3Y4
+    u8 D1;
+    u8 D2;
+    u8 M1;
+    u8 M2;
+    u8 Y1;
+    u8 Y2;
+    u8 Y3;
+    u8 Y4;
+} Date_t;
 
-// Define an enum for the digits of date and time
+// Enum for digits of date and time
 typedef enum {
-    DIGIT_HOURS,
-    DIGIT_MINUTES,
-    DIGIT_SECONDS,
-    DIGIT_DAY,  // Adjusted to come before DIGIT_MONTH
-    DIGIT_MONTH,
-    DIGIT_YEAR_THOUSANDS,
-    DIGIT_YEAR_HUNDREDS,
-    DIGIT_YEAR_TENS,
-    DIGIT_YEAR_UNITS
-} DateTimeDigit;
+    H1,
+    H2,
+    M1,
+    M2,
+    S1,
+    S2,
+    D1,
+    D2,
+    Mo1,
+    Mo2,
+    Y1,
+    Y2,
+    Y3,
+    Y4,
+} Digits_t;
 
 /********************************************************************************************************/
 /************************************************APIs****************************************************/
@@ -53,13 +69,13 @@ typedef enum {
 void edit_DateTime(u8 frame);
 
 // Getter API for time
-Time getTime(void);
+Time_t getTime(void);
 
 // Getter API for date
-Date getDate(void);
+Date_t getDate(void);
 
 // Getter API for current digit being edited
-DateTimeDigit getCurrentDigit(void);
+Digits_t getCurrentDigit(void);
 
 
 #endif // DateAndTime_H_

@@ -22,15 +22,14 @@
 /********************************************************************************************************/
 
 
-
 /********************************************************************************************************/
 /************************************************Variables***********************************************/
 /********************************************************************************************************/
 
 // Global variables for time and date
-static Time currentTime = {.hours = 0, .minutes = 0, .seconds = 0, .milliseconds = 0};
-static Date currentDate = {.day = 17, .month = 4, .year = 2024};
-static DateTimeDigit currDigit = DIGIT_HOURS;
+Time_t currentTime = {0, 0, 0, 0, 0, 0};
+Date_t currentDate = {2, 2, 0, 4, 2, 0, 2, 4};
+static Digits_t currDigit = H1;
 
 /********************************************************************************************************/
 /*****************************************Static Functions Prototype*************************************/
@@ -45,80 +44,79 @@ static DateTimeDigit currDigit = DIGIT_HOURS;
 // Runnable to update time and date
 void runnable_updateDateAndTime(void)
 {
-    // Increment milliseconds by the periodicity
-    currentTime.milliseconds += PERIODICITY_MS;
-
-    // Check if milliseconds overflowed
-    if (currentTime.milliseconds >= 100)
+    // Increment seconds
+    currentTime.S2++;
+    if (currentTime.S2 >= 10)
     {
-        currentTime.milliseconds -= 100;
-        currentTime.seconds++;
-
-        // Check if seconds overflowed
-        if (currentTime.seconds >= 60)
+        currentTime.S2 = 0;
+        currentTime.S1++;
+        if (currentTime.S1 >= 6)
         {
-            currentTime.seconds -= 60;
-            currentTime.minutes++;
-
-            // Check if minutes overflowed
-            if (currentTime.minutes >= 60)
+            currentTime.S1 = 0;
+            // Increment minutes
+            currentTime.M2++;
+            if (currentTime.M2 >= 10)
             {
-                currentTime.minutes -= 60;
-                currentTime.hours++;
-
-                // Check if hours overflowed
-                if (currentTime.hours >= 24)
+                currentTime.M2 = 0;
+                currentTime.M1++;
+                if (currentTime.M1 >= 6)
                 {
-                    currentTime.hours = 0;
-                    // Increment the date at midnight
-                    currentDate.day++;
-
-                    // Check if day overflowed based on the month and year
-                    switch (currentDate.month)
+                    currentTime.M1 = 0;
+                    // Increment hours
+                    currentTime.H2++;
+                    if (currentTime.H2 >= 10)
                     {
-                    case 2: // February
-                        if ((currentDate.year % 4 == 0 && currentDate.year % 100 != 0) || (currentDate.year % 400 == 0))
+                        currentTime.H2 = 0;
+                        currentTime.H1++;
+                        if (currentTime.H1 >= 2 && currentTime.H2 >= 4)
                         {
-                            if (currentDate.day > 29)
+                            currentTime.H1 = 0;
+                        }
+                    }
+                    // Increment day
+                    currentDate.D2++;
+                    if (currentDate.D2 >= 10)
+                    {
+                        currentDate.D2 = 0;
+                        currentDate.D1++;
+                        // Handle day overflow
+                        if (currentDate.D1 >= 4)
+                        {
+                            currentDate.D1 = 0;
+                            currentDate.M2++;
+                            if (currentDate.M2 >= 10)
                             {
-                                currentDate.day = 1;
-                                currentDate.month++;
+                                currentDate.M2 = 0;
+                                currentDate.M1++;
+                                if (currentDate.M1 >= 2)
+                                {
+                                    currentDate.M1 = 0;
+                                    // Increment month
+                                    currentDate.Y4++;
+                                    if (currentDate.Y4 >= 10)
+                                    {
+                                        currentDate.Y4 = 0;
+                                        currentDate.Y3++;
+                                        if (currentDate.Y3 >= 10)
+                                        {
+                                            currentDate.Y3 = 0;
+                                            currentDate.Y2++;
+                                            if (currentDate.Y2 >= 10)
+                                            {
+                                                currentDate.Y2 = 0;
+                                                currentDate.Y1++;
+                                                // Handle year overflow
+                                                if (currentDate.Y1 >= 10)
+                                                {
+                                                    // Reset year to 0
+                                                    currentDate.Y1 = 0;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
-                        else
-                        {
-                            if (currentDate.day > 28)
-                            {
-                                currentDate.day = 1;
-                                currentDate.month++;
-                            }
-                        }
-                        break;
-                    case 4:
-                    case 6:
-                    case 9:
-                    case 11: // April, June, September, November
-                        if (currentDate.day > 30)
-                        {
-                            currentDate.day = 1;
-                            currentDate.month++;
-                        }
-                        break;
-                    default: // January, March, May, July, August, October, December
-                        if (currentDate.day > 31)
-                        {
-                            currentDate.day = 1;
-                            if (currentDate.month == 12)
-                            {
-                                currentDate.month = 1;
-                                currentDate.year++;
-                            }
-                            else
-                            {
-                                currentDate.month++;
-                            }
-                        }
-                        break;
                     }
                 }
             }
@@ -126,127 +124,133 @@ void runnable_updateDateAndTime(void)
     }
 }
 
-// API function to edit date and time
-void edit_DateTime(u8 frame)
-{
-    switch (frame)
-    {
-    case SWITCH_INC:
-        // Increment the current digit
-        switch (currDigit)
-        {
-        case DIGIT_HOURS:
-            currentTime.hours++;
-            if (currentTime.hours >= 24)
-            {
-                currentTime.hours = 0;
-            }
-            break;
-        case DIGIT_MINUTES:
-            currentTime.minutes++;
-            if (currentTime.minutes >= 60)
-            {
-                currentTime.minutes = 0;
-            }
-            break;
-        case DIGIT_SECONDS:
-            currentTime.seconds++;
-            if (currentTime.seconds >= 60)
-            {
-                currentTime.seconds = 0;
-            }
-            break;
-        case DIGIT_DAY:
-            currentDate.day++;
-            // Handle day overflow based on the month
-            switch (currentDate.month)
-            {
-            case 2: // February
-                if ((currentDate.year % 4 == 0 && currentDate.year % 100 != 0) || (currentDate.year % 400 == 0))
-                {
-                    if (currentDate.day > 29)
-                    {
-                        currentDate.day = 1;
+
+// Function to edit date and time
+void edit_DateTime(u8 frame) {
+    switch (frame) {
+        case SWITCH_INC:
+            // Increment the current digit
+            switch (currDigit) {
+                case H1:
+                    currentTime.H1++;
+                    if (currentTime.H1 >= 3) {
+                        currentTime.H1 = 0;
                     }
-                }
-                else
-                {
-                    if (currentDate.day > 28)
-                    {
-                        currentDate.day = 1;
+                    break;
+                case H2:
+                    currentTime.H2++;
+                    if (currentTime.H1 == 2 && currentTime.H2 >= 4) {
+                        currentTime.H2 = 0;
+                    } else if (currentTime.H2 >= 10) {
+                        currentTime.H2 = 0;
                     }
-                }
-                break;
-            case 4:
-            case 6:
-            case 9:
-            case 11: // April, June, September, November
-                if (currentDate.day > 30)
-                {
-                    currentDate.day = 1;
-                }
-                break;
-            default: // January, March, May, July, August, October, December
-                if (currentDate.day > 31)
-                {
-                    currentDate.day = 1;
-                }
-                break;
+                    break;
+                case M1:
+                    currentTime.M1++;
+                    if (currentTime.M1 >= 6) {
+                        currentTime.M1 = 0;
+                    }
+                    break;
+                case M2:
+                    currentTime.M2++;
+                    if (currentTime.M2 >= 10) {
+                        currentTime.M2 = 0;
+                    }
+                    break;
+                case S1:
+                    currentTime.S1++;
+                    if (currentTime.S1 >= 6) {
+                        currentTime.S1 = 0;
+                    }
+                    break;
+                case S2:
+                    currentTime.S2++;
+                    if (currentTime.S2 >= 10) {
+                        currentTime.S2 = 0;
+                    }
+                    break;
+                case D1:
+                    currentDate.D1++;
+                    if (currentDate.D1 >= 4) {
+                        currentDate.D1 = 0;
+                    }
+                    break;
+                case D2:
+                    currentDate.D2++;
+                    if (currentDate.D2 >= 10) {
+                        currentDate.D2 = 0;
+                    }
+                    break;
+                case Mo1:
+                    currentDate.M1++;
+                    if (currentDate.M1 >= 2) {
+                        currentDate.M1 = 0;
+                    }
+                    break;
+                case Mo2:
+                    currentDate.M2++;
+                    if (currentDate.M2 >= 10) {
+                        currentDate.M2 = 0;
+                    }
+                    break;
+                case Y1:
+                    currentDate.Y1++;
+                    if (currentDate.Y1 >= 10) {
+                        currentDate.Y1 = 0;
+                    }
+                    break;
+                case Y2:
+                    currentDate.Y2++;
+                    if (currentDate.Y2 >= 10) {
+                        currentDate.Y2 = 0;
+                    }
+                    break;
+                case Y3:
+                    currentDate.Y3++;
+                    if (currentDate.Y3 >= 10) {
+                        currentDate.Y3 = 0;
+                    }
+                    break;
+                case Y4:
+                    currentDate.Y4++;
+                    if (currentDate.Y4 >= 10) {
+                        currentDate.Y4 = 0;
+                    }
+                    break;
             }
             break;
-        case DIGIT_MONTH:
-            currentDate.month++;
-            if (currentDate.month > 12)
-            {
-                currentDate.month = 1;
+        case SWITCH_MODE:
+            // Exit editing mode
+            // Add additional logic here if needed
+            break;
+        case SWITCH_NEXT_DIGIT:
+            // Move to the next digit
+            currDigit++;
+            if (currDigit >= Y4 + 1) {
+                currDigit = H1; // Wrap around to the beginning
             }
             break;
-        case DIGIT_YEAR_THOUSANDS:
-            currentDate.year += 1000;
+        default:
+            // Handle invalid frame
             break;
-        case DIGIT_YEAR_HUNDREDS:
-            currentDate.year += 100;
-            break;
-        case DIGIT_YEAR_TENS:
-            currentDate.year += 10;
-            break;
-        case DIGIT_YEAR_UNITS:
-            currentDate.year++;
-            break;
-        }
-        break;
-    case SWITCH_MODE:
-        exitEditDateAndTime();
-        // You can add additional logic here if needed
-        break;
-    case SWITCH_NEXT_DIGIT:
-        // Move to the next digit
-        currDigit++;
-        if (currDigit > DIGIT_YEAR_UNITS)
-        {
-            currDigit = DIGIT_HOURS; // Wrap around to the beginning
-        }
-        break;
-    default:
-        // Handle invalid frame
-        break;
     }
 }
+
 
 // Getter API for time
-Time getTime()
+Time_t getTime()
 {
     return currentTime;
 }
 
 // Getter API for date
-Date getDate()
+Date_t getDate()
 {
     return currentDate;
 }
 
 // Getter API for current digit being edited
-DateTimeDigit getCurrentDigit()
+Digits_t getCurrentDigit()
 {
     return currDigit;
 }
