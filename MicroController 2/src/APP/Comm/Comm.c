@@ -5,7 +5,7 @@
 #include "Comm.h"
 #include "Mode.h"
 #include "DateAndTime.h"
-#include "HUSART.h"
+#include "../../HAL/HUSART/HUSART.h"
 #include "Frames_cfg.h"
 
 /********************************************************************************************************/
@@ -87,7 +87,7 @@ void Comm_collect(void)
             break;
 
         case Mode_StopWatch:
-            /* Call Control StopWatch */
+            controlSW(frame);
             break;
 
         case Mode_DateAndTime:
