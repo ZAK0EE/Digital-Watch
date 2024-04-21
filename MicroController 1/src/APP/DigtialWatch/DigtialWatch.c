@@ -392,12 +392,12 @@ static void DW_StopWatch_Modes(void)
         Display_printCenteredAsync(buff, len);
 
         /* Switch to operation mode if edit switch is pressed */
-        if (Edit_switch_status == BUTTON_IS_PRESSED)
+        if (Edit_switch_status == BUTTON_IS_PRESSED && Mode_switch_status == BUTTON_IS_NOT_PRESSED)
         {
             // Current_StopWatch_Mode = DW_Mode_StopWatch_Operation;
             StopWatch_Start_Stop++;
             Current_StopWatch_Mode = StopWatch_Start_Stop;
-            if (Current_StopWatch_Mode == DW_Mode_StopWatch_Pause)
+            if (Current_StopWatch_Mode == DW_Mode_StopWatch_Pause )
             {
                 StopWatch_pause();
                 Current_StopWatch_Mode = DW_Mode_StopWatch_Show;
