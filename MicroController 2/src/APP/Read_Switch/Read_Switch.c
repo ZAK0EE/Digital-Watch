@@ -29,6 +29,7 @@ void HSwitch(void)
     for (u8 iter = 0; iter < _Num_Of_Switches; ++iter)
     {
         SWITCH_Get_State(iter , &Current_State);
+        
         if(Current_State == Prev_State[iter])
         {
             ++Counter[iter];
