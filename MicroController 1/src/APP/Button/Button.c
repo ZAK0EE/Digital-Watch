@@ -119,7 +119,16 @@ Button_state_t Button_isPressed(Button_ID_t ButtonID)
 }
 Button_holdState_t Button_isPressedAndHeld(Button_ID_t ButtonID)
 {
-    return Button_status[ButtonID].IsHeld;
+    Button_state_t state = 3; 
+    if(ButtonID < _NUM_OF_BUTTONS)
+    {
+        state = Button_status[ButtonID].IsHeld;
+        Button_status[ButtonID].IsHeld = BUTTON_IS_NOT_HELD;
+    }
+    else
+        state = Button_status[ButtonID].IsHeld;
+
+    return state;    
 }
 
 void Button_task(void)
