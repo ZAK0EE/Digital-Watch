@@ -116,8 +116,6 @@ typedef struct{
     u32 speed;
 }GPIO_pinConfig_t;
 
-
-
 GPIO_errorState_t GPIO_initPin(GPIO_pinConfig_t *pinStr);
 GPIO_errorState_t GPIO_setPin(void* port, u32 pin, u32 state);
 GPIO_errorState_t GPIO_getPin(void* port, u32 pin, u32 *pinState);
