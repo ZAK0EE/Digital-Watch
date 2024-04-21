@@ -78,6 +78,6 @@ Sched_Runnable_Config_t Sched_Runnables[_NUM_OF_RUNNABLES] =
      {
           .CallBack = Button_task,
           .DelayMS = 40,
-          .PeriodicityMS = 100,
+          .PeriodicityMS = 50,
      },
 };

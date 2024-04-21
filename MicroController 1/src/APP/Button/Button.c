@@ -35,6 +35,13 @@ typedef struct
 }
 Button_status_t;
 
+typedef enum
+{
+    UARTMSG_INC_BUTTON_IS_PRESSED = 0x10,
+    UARTMSG_MODE_BUTTON_IS_PRESSED =  0x20,
+    UARTMSG_EDIT_BUTTON_IS_PRESSED =  0x30,
+    UARTMSG_MODE_EDIT_BUTTON_IS_HELD =  0x40,
+}Button_UART_MSG_t;
 
 /********************************************************************************************************/
 /************************************************Variables***********************************************/
@@ -134,13 +141,34 @@ void Button_task(void)
     // HSwitch_Get_Status(Edit, &status);
     // UART_TX_frame |= (status << Edit); 
 
-    // /* Send the UART frame */
-    // HUSART_UserReq_t HUART_TxReq =
-    // {
-    //     .USART_ID = USART1_ID,
-    //     .Ptr_buffer= &UART_TX_frame,
-    //     .Buff_Len = 1,
-    //     .Buff_cb = 0,
-    // };
-    // HUART_SendBuffAsync(&HUART_TxReq);
+    /* Send the UART frame */
+    UART_TX_frame = 0;
+    if(Button_isPressed(Increment))
+    {
+        UART_TX_frame = UARTMSG_INC_BUTTON_IS_PRESSED;
+    }
+    else if(Button_isPressed(Edit))
+    {
+        UART_TX_frame = UARTMSG_EDIT_BUTTON_IS_PRESSED;
+    }   
+    else if(Button_isPressed(Mode))
+    {
+        UART_TX_frame = UARTMSG_MODE_BUTTON_IS_PRESSED;
+    }    
+    else if(Button_isPressedAndHeld(Mode) && Button_isPressedAndHeld(Edit))
+    {
+        UART_TX_frame = UARTMSG_MODE_EDIT_BUTTON_IS_HELD;
+    }    
+
+    if(UART_TX_frame != 0)
+    {
+        HUSART_UserReq_t HUART_TxReq =
+        {
+            .USART_ID = USART1_ID,
+            .Ptr_buffer= &UART_TX_frame,
+            .Buff_Len = 1,
+            .Buff_cb = 0,
+        };
+        HUART_SendBuffAsync(&HUART_TxReq);
+    }
 }
