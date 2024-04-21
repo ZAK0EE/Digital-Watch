@@ -118,7 +118,7 @@ void DW_Runnable(void)
         {
             Current_Operation_Mode = DW_Mode_Reset;
         }
-        if ((Clock_Prev_State != DW_Mode_Clock_Edit) && (Mode_switch_status == BUTTON_IS_PRESSED))
+        if ((Clock_Prev_State != DW_Mode_Clock_Edit) && (Mode_switch_status == BUTTON_IS_PRESSED) && Edit_switch_status == BUTTON_IS_NOT_PRESSED) 
         {
 
             Current_Operation_Mode = DW_Mode_StopWatch;
@@ -133,7 +133,7 @@ void DW_Runnable(void)
         {
             Current_Operation_Mode = DW_Mode_Reset;
         }
-        if ((Mode_switch_status == BUTTON_IS_PRESSED))
+        if ((Mode_switch_status == BUTTON_IS_PRESSED) && Edit_switch_status == BUTTON_IS_NOT_PRESSED)
         {
             Current_Operation_Mode = DW_Mode_Clock;
             Display_clearScreenAsync();
