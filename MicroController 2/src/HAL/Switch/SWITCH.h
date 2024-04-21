@@ -58,6 +58,6 @@ Error_t SWITCH_Init(void);
  * @param SWITCH_State Pointer to store the state of the switch
  * @return Error_t Error status indicating success or failure of getting the state
  */
-Error_t SWITCH_Get_State(SWITCH_Names_t SWITCH_Name, Switch_State_t *SWITCH_State);
+Error_t SWITCH_Get_State(SWITCH_Names_t SWITCH_Name, u32 *SWITCH_State);
 
-#endif /* SWITCH_H_ */ // End of header guard and file
+#endif /* SWITCH_H_ */ 
