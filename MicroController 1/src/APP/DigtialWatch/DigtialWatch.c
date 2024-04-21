@@ -113,15 +113,12 @@ void DW_Runnable(void)
     case DW_Mode_Clock:
         /* Execute clock display modes */
         DW_Clock_Modes();
-        if ((Mode_switch_status == BUTTON_IS_PRESSED && Edit_switch_status == BUTTON_IS_PRESSED))
+        /* Switch to stopwatch mode if the mode switch is pressed */
+        if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
         {
-            /* Switch to stopwatch mode if the mode switch is pressed */
-            if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
-            {
-                Current_Operation_Mode = DW_Mode_Reset;
-            }
+            Current_Operation_Mode = DW_Mode_Reset;
         }
-        if (( Clock_Prev_State != DW_Mode_Clock_Edit ) && (Mode_switch_status == BUTTON_IS_PRESSED) )
+        if ((Clock_Prev_State != DW_Mode_Clock_Edit) && (Mode_switch_status == BUTTON_IS_PRESSED))
         {
 
             Current_Operation_Mode = DW_Mode_StopWatch;
@@ -131,23 +128,15 @@ void DW_Runnable(void)
     case DW_Mode_StopWatch:
         /* Execute stopwatch display modes */
         DW_StopWatch_Modes();
-
-        /* Switch to clock mode if the mode switch is pressed */
-        if ((Mode_switch_status == BUTTON_IS_PRESSED && Edit_switch_status == BUTTON_IS_PRESSED))
+        /* Switch to stopwatch mode if the mode switch is pressed */
+        if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
         {
-            /* Switch to stopwatch mode if the mode switch is pressed */
-            if (Mode_held_status == BUTTON_IS_HELD && Edit_held_status == BUTTON_IS_HELD)
-            {
-                Current_Operation_Mode = DW_Mode_Reset;
-            }
+            Current_Operation_Mode = DW_Mode_Reset;
         }
-        else if ((Mode_switch_status == BUTTON_IS_PRESSED))
+        if ((Mode_switch_status == BUTTON_IS_PRESSED))
         {
             Current_Operation_Mode = DW_Mode_Clock;
             Display_clearScreenAsync();
-        }
-        else
-        {
         }
         break;
     case DW_Mode_Reset:
@@ -202,7 +191,7 @@ static void DW_Clock_Modes(void)
         Display_setCursorAsync(1, 0);
         len = sprintf(buff, "%.2d/%.2d/%.4d", (int)Time->day, (int)Time->month, (int)Time->year);
         Display_printCenteredAsync(buff, len);
-        Clock_Prev_State = DW_Mode_Clock_Show ; 
+        Clock_Prev_State = DW_Mode_Clock_Show;
         /* Switch to edit mode if the edit switch is pressed */
         if (Edit_switch_status == BUTTON_IS_PRESSED)
         {
@@ -261,7 +250,7 @@ static void DW_Clock_Modes(void)
             case DW_YEAR_FST_DIG:
                 Inc_Amount = 1000;
                 new_tens = (Time->year / 1000) * 1000 + Inc_Amount;
-                new_ones = (Time->year % 1000 );
+                new_ones = (Time->year % 1000);
                 Clock_SetYears(new_tens + new_ones);
                 break;
             case DW_YEAR_SEC_DIG:
@@ -302,21 +291,21 @@ static void DW_Clock_Modes(void)
 
                 // If the new tens digit exceeds the maximum days in the month, reset it to 0
                 if (new_tens >= DW_days_in_month[(Time->month) - 1])
-                {   
-                    if (new_tens < 40 )
-                    {   
+                {
+                    if (new_tens < 40)
+                    {
                         new_tens = 30;
                         new_ones = 0;
                     }
-                    else if (new_tens >= 40 || ((Time->month ==2) && (new_tens >= 30)  ))
+                    else if (new_tens >= 40 || ((Time->month == 2) && (new_tens >= 30)))
                     {
-                            new_tens = 0 ;
-                             new_ones = 1 ;
+                        new_tens = 0;
+                        new_ones = 1;
                     }
                 }
 
                 // Update the display with the new day value
-                Clock_SetDays(new_tens +new_ones);
+                Clock_SetDays(new_tens + new_ones);
                 break;
             case DW_DAY_SEC_DIG:
                 Inc_Amount = 1;
@@ -349,7 +338,7 @@ static void DW_Clock_Modes(void)
         if (Mode_switch_status == BUTTON_IS_PRESSED)
         {
             Current_Clock_Mode = DW_Mode_Clock_Show;
-            Clock_Prev_State = DW_Mode_Clock_Edit ; 
+            Clock_Prev_State = DW_Mode_Clock_Edit;
             current_posstion = DW_HR_SEC_DIG;
             Display_stopBlinkChar();
         }
