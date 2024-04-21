@@ -67,7 +67,6 @@ static const uint8_t DigitCol[_DW_DIGIT_NUM] = {3, 4, 6, 7, 9, 10, 3, 4, 6, 7, 9
 static DW_Mode Current_Operation_Mode = DW_Mode_Clock;
 static DW_ClockMode Current_Clock_Mode = DW_Mode_Clock_Show;
 static DW_StopWatchModes Current_StopWatch_Mode = DW_Mode_StopWatch_Show;
-/* Static variable to keep track of the current stopwatch mode */
 static DW_StopWatchModes StopWatch_Start_Stop = DW_Mode_StopWatch_Show;
 uint8_t Edit_switch_status = 0;
 uint8_t Inc_switch_status = 0;
@@ -99,15 +98,6 @@ void DW_Runnable(void)
     Edit_switch_status = Button_isPressed(Edit);
     Mode_held_status = Button_isPressedAndHeld(Mode);
     Edit_held_status = Button_isPressedAndHeld(Edit);
-    /* Get status of the increment switch */
-    // HSwitch_Get_Status(Increment, &Inc_switch_status);
-
-    // /* Get status of the mode switch */
-    // HSwitch_Get_Status(Mode, &Mode_switch_status);
-
-    // /* Get status of the edit switch */
-    // HSwitch_Get_Status(Edit, &Edit_switch_status);
-
     switch (Current_Operation_Mode)
     {
     case DW_Mode_Clock:
