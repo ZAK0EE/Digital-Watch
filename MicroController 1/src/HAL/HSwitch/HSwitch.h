@@ -45,7 +45,7 @@ Error_enumStatus_t HSwitch_Init (void);
 /*
  * @brief    : Sets the value of a HSwitch pin to a specified state.
  * @param[in]: Copy_HSwitchName - HSwitch Name or ID.
- * @param[in]: Copy_HSwitchStatus - The state that desired to be set if it was HSwitch_PRESSED or HSwitch_RELEASED .
+ * @param[in]: Ptr_Status - The state of Switch in the buffer provided if it wasHSwitch_PRESSED or HSwitch_RELEASED.
  * @return   : Error_enumStatus_t - Error status indicating success or failure of setting the pin value.
  * @details  : This function sets the value of a HSwitch pin to the specified state (high or low).
  */
