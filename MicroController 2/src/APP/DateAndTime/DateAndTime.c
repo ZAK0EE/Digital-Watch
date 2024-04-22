@@ -3,8 +3,8 @@
 /********************************************************************************************************/
 
 #include "DateAndTime.h"
-#include "Mode.h"
-#include "Frames_cfg.h"
+#include "../Mode/Mode.h"
+#include "../Frames_cfg.h"
 
 /********************************************************************************************************/
 /************************************************Defines*************************************************/
@@ -126,9 +126,11 @@ void runnable_updateDateAndTime(void)
 
 
 // Function to edit date and time
-void edit_DateTime(u8 frame) {
+void edit_DateTime(u8 frame)
+{
     switch (frame) {
         case SWITCH_INC:
+            enterEditDateAndTime();
             // Increment the current digit
             switch (currDigit) {
                 case H1:
@@ -220,11 +222,13 @@ void edit_DateTime(u8 frame) {
             }
             break;
         case SWITCH_MODE:
+            exitEditDateAndTime();
             // Exit editing mode
             // Add additional logic here if needed
             break;
         case SWITCH_NEXT_DIGIT:
             // Move to the next digit
+
             currDigit++;
             if (currDigit >= Y4 + 1) {
                 currDigit = H1; // Wrap around to the beginning

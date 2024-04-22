@@ -1,4 +1,4 @@
-#include "MCAL/RCC/RCC.h"
+#include "RCC.h"
 
 /*Target Base Address*/
 #define RCC_BASE_ADDRESS 0x40023800

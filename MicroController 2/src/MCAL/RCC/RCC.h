@@ -1,8 +1,20 @@
 #ifndef RCC_H_
 #define RCC_H_
 
-#include "../../../lib/StdTypes.h"
-#include "../../../lib/Error/Error.h"
+#include "../../lib/StdTypes.h"
+typedef enum
+{
+
+    ERROR_Nok,
+    ERROR_Ok,
+    ERROR_Invalid_Argument,
+    Error_Out_Of_Range,
+    ERROR_Invalid_IRQ,
+    ERROR_NULL_Pointer,
+
+}Error_t;
+
+//Error_t Validate_NULL_Pointer(void *Ptr);
 
 /* Enable SYSTEM CLOCK */
 #define RCC_ENABLE_SYSTEM_CLOCK_HSI     0X00000001UL
@@ -134,4 +146,4 @@ Error_t RCC_Enable_APB2_Peripheral_Clock(u32 Peripheral);
  */
 Error_t RCC_Disable_APB2_Peripheral_Clock(u32 Peripheral);
 
-#endif /* RCC_H_ */
+#endif

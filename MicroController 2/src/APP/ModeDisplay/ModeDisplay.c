@@ -1,85 +1,36 @@
 #include "../../lib/StdTypes.h"
-#include "../HAL/LCD/LCD.h"
+#include "../../HAL/LCD/LCD.h"
 #include "../Mode/Mode.h"
 #include "../DateAndTime/DateAndTime.h"
 #include "../StopWatch/StopWatch.h"
-#include "../Mode/Mode.h"
-
-// typedef struct
-// {
-//     // H1H2 : M1M2 : S1S2
-//     u8 H1;
-//     u8 H2;
-
-//     u8 M1;
-//     u8 M2;
-
-//     u8 S1;
-//     u8 S2;
-
-//     u8 Ms1;
-//     u8 Ms2;
-
-// }Time_t;
-
-// typedef struct
-// {
-//     //D1D2 : M1M2 : Y1Y2Y3Y4
-//     u8 D1;
-//     u8 D2;
-
-//     u8 M1;
-//     u8 M2;
-
-//     u8 Y1;
-//     u8 Y2;
-//     u8 Y3;
-//     u8 Y4;
-
-// }Date_t;
-
-
-// typedef enum
-// {
-//     H1,
-//     H2,
-//     M1,
-//     M2,
-//     S1,
-//     S2,
-
-//     D1,
-//     D2,
-//     Mo1,
-//     Mo2,
-//     Y1,
-//     Y2,
-//     Y3,
-//     Y4,
-// }Digits_t;
 
 u8 TimeMs  = 0;
 
 /*static APIs*/
 static void Print_Current_Date_And_Time(Date_t Date, Time_t Time);
-static void print_Stop_Watch(Time_t Time);
+static void print_Stop_Watch(StopWatchTime_t Time);
 static void Print_Edit_Date_And_Time(u8 Current_Digit);
 
 void ModeDisplay(void)
 {   
-    u8 Current_Mode = getMode();
+    Mode_modeType_t Current_Mode = getMode();
     Time_t Time = getTime();
-    u8 Current_Digit = getCurrentDigit();
+    Date_t Date = getDate();
+    StopWatchTime_t ST_Time = getSW();
+    Digits_t Current_Digit = getCurrentDigit();
 
     switch (Current_Mode)
-    {
+    { 
     case Mode_DateAndTime:
+        //LCD_Clear_Async(LCD1);
         Print_Current_Date_And_Time(Date, Time);
         break;
     case Mode_StopWatch:
-        print_Stop_Watch(Time);
+        //LCD_Clear_Async(LCD1);
+        print_Stop_Watch(ST_Time);
         break;
     case Mode_EditDateAndTime:
+        //LCD_Clear_Async(LCD1);
         Print_Edit_Date_And_Time(Current_Digit);
         break;
     
@@ -213,9 +164,10 @@ static void Print_Current_Date_And_Time(Date_t Date, Time_t Time)
     
 }
 
-static void print_Stop_Watch(Time_t Time)
+static void print_Stop_Watch(StopWatchTime_t Time)
 {
     ++TimeMs;
+    
     switch (TimeMs)
     {
      case 1:

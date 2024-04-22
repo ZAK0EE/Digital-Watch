@@ -1,7 +1,7 @@
 #ifndef LCD_CONFG_H_    // Header guard: prevents multiple inclusion of the same header file
 #define LCD_CONFG_H_
 
-#include "../lib/StdTypes.h"    // Include standard types header file
+#include "../../lib/StdTypes.h"    // Include standard types header file
 
 /* PORTS */
 

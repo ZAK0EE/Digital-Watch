@@ -18,10 +18,15 @@
 /********************************************************************************************************/
 
 typedef enum{
-    HSwtich,
-    ReadSwitch,
-    
-    _NUM_OF_RUNNABLES
+
+    Update_DateAndTime_Run,
+    Update_SW_Run,
+    LCD_Run,
+    HSwtich_Run,
+    Read_Switch_Run,
+    Mode_Dislay_Run,
+
+    _NUM_OF_RUNNABLES,
 }Sched_runnablesNames_t;
 
 /********************************************************************************************************/

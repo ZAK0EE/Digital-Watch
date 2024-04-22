@@ -1,7 +1,7 @@
 #ifndef CONTROL_CLOCK_H_
 #define CONTROL_CLOCK_H_
 
-#include "MCAL/RCC/RCC.h"
+#include "../../MCAL/RCC/RCC.h"
 
 #define ON      (1U)
 #define OFF     (0U)

@@ -1,4 +1,4 @@
-#ifndef LCD_H_    // Header guard: prevents multiple inclusion of the same header file
+#ifndef LCD_H_    
 #define LCD_H_
 
 #include "LCD_Confg.h"    // Include necessary configuration header file

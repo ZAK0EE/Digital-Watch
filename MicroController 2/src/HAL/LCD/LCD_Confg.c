@@ -33,9 +33,9 @@ const LCD_PortPin_t LCD_Pins_Arr[LCD_Num] =
         .LCD_arr[LCD_DB5].Pin  = LCD_PIN_8,     // Pin 8 for Data pin 5
 
         .LCD_arr[LCD_DB6].Port = LCD_PORT_A,    // Port B for Data pin 6
-        .LCD_arr[LCD_DB6].Pin  = LCD_PIN_9,     // Pin 9 for Data pin 6
+        .LCD_arr[LCD_DB6].Pin  = LCD_PIN_11,     // Pin 9 for Data pin 6
 
         .LCD_arr[LCD_DB7].Port = LCD_PORT_A,    // Port B for Data pin 7
-        .LCD_arr[LCD_DB7].Pin  = LCD_PIN_10,    // Pin 10 for Data pin 7
+        .LCD_arr[LCD_DB7].Pin  = LCD_PIN_12,    // Pin 10 for Data pin 7
     },
 };

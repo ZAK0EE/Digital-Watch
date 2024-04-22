@@ -1,9 +1,11 @@
-#ifndef SWITCH_H_ // Header guard to prevent multiple inclusion of the header file
-#define SWITCH_H_ // Define the header guard macro
+#ifndef SWITCH_H_ 
+#define SWITCH_H_ 
 
-#include "../../lib/StdTypes.h" // Include standard types header file
-#include "../../lib/Error/Error.h" // Include error handling header file
-#include "HAL/Switch/SWITCH_Confg.h" // Include switch configuration header file
+
+#include "../../lib/StdTypes.h"
+#include "SWITCH_Confg.h" 
+ 
+
 
 // Definitions for switch ports
 #define SWITCH_PORT_A 0x00000000
@@ -38,6 +40,7 @@ typedef struct {
     u32 Pin;  // Pin of the switch
 } SWITCH_Confg_t; // Define the structure type
 
+
 // Enumeration for switch states
 typedef enum {
     Switch_Pressed,  // Switch pressed state
@@ -49,7 +52,7 @@ typedef enum {
  * 
  * @return Error_t Error status indicating success or failure of initialization
  */
-Error_t SWITCH_Init(void);
+void SWITCH_Init(void);
 
 /**
  * @brief Get the state of a specific switch
@@ -58,6 +61,6 @@ Error_t SWITCH_Init(void);
  * @param SWITCH_State Pointer to store the state of the switch
  * @return Error_t Error status indicating success or failure of getting the state
  */
-Error_t SWITCH_Get_State(SWITCH_Names_t SWITCH_Name, u32 *SWITCH_State);
+void SWITCH_Get_State(SWITCH_Names_t SWITCH_Name, u32 *SWITCH_State);
 
 #endif /* SWITCH_H_ */ 
