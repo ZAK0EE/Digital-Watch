@@ -138,8 +138,10 @@ void DW_Runnable(void)
         Clock_SetYears(2000);
         StopWatch_reset();
         Display_clearScreenAsync();
+        Display_stopBlinkChar();
         Current_Operation_Mode = DW_Mode_Clock;
         StopWatch_Start_Stop = DW_Mode_StopWatch_Show;
+        Current_Clock_Mode = DW_Mode_Clock_Show;
 
         break;
 
