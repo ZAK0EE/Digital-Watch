@@ -8,6 +8,7 @@
 #include "../../HAL/HUSART/HUSART.h"
 #include "../Frames_cfg.h"
 #include "../StopWatch/StopWatch.h"
+#include "../../HAL/LCD/LCD.h"
 /********************************************************************************************************/
 /************************************************Defines*************************************************/
 /********************************************************************************************************/
@@ -30,7 +31,7 @@ static u8 TxBuffer[1] = {0};
 
 void Comm_collect(void);
 
-HUSART_UserReq_t recieveReq = {.USART_ID = HUSART1_ID, .Ptr_buffer = RxBuffer, .Buff_Len = 1, .Buff_cb = &Comm_collect};
+HUSART_UserReq_t recieveReq = {.USART_ID = HUSART1_ID, .Ptr_buffer = RxBuffer, .Buff_Len = 1, .Buff_cb = Comm_collect};
 HUSART_UserReq_t sendReq = {.USART_ID = HUSART1_ID, .Ptr_buffer = TxBuffer, .Buff_Len = 1, .Buff_cb = NULLPTR};
 
 /********************************************************************************************************/
@@ -83,10 +84,12 @@ void Comm_collect(void)
         switch (currMode)
         {
         case Mode_EditDateAndTime:
+        LCD_Clear_Async(LCD1);
             edit_DateTime(frame);
             break;
 
         case Mode_StopWatch:
+        LCD_Clear_Async(LCD1);
             controlSW(frame);
             break;
 
@@ -99,10 +102,12 @@ void Comm_collect(void)
                 break;
 
             case FRAME_SWITCH_NO2:
+            LCD_Clear_Async(LCD1);
                 changeMode(frame);
                 break;
             
             case FRAME_SWITCH_NO3:
+            LCD_Clear_Async(LCD1);
                 enterEditDateAndTime();
                 break;
 

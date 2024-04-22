@@ -42,22 +42,24 @@ void changeMode(u8 frame)
 {
     if(currMode == Mode_DateAndTime)
     {
-        LCD_Clear_Async(LCD1);
         currMode = Mode_StopWatch;
     }
     else if(currMode == Mode_StopWatch)
     {
-        LCD_Clear_Async(LCD1);
         currMode = Mode_DateAndTime;
     }
+    LCD_Clear_Async(LCD1);
+
 }
 
 void enterEditDateAndTime(void)
 {
+    LCD_Clear_Async(LCD1);
     currMode = Mode_EditDateAndTime;
 }
 
 void exitEditDateAndTime(void)
 {
+    LCD_Clear_Async(LCD1);
     currMode = Mode_DateAndTime;
 }

@@ -9,7 +9,7 @@ u8 TimeMs  = 0;
 /*static APIs*/
 static void Print_Current_Date_And_Time(Date_t Date, Time_t Time);
 static void print_Stop_Watch(StopWatchTime_t Time);
-static void Print_Edit_Date_And_Time(u8 Current_Digit);
+static void Print_Edit_Date_And_Time(u8 Current_Digit, Time_t Time, Date_t Date);
 
 void ModeDisplay(void)
 {   
@@ -22,16 +22,13 @@ void ModeDisplay(void)
     switch (Current_Mode)
     { 
     case Mode_DateAndTime:
-        //LCD_Clear_Async(LCD1);
         Print_Current_Date_And_Time(Date, Time);
         break;
     case Mode_StopWatch:
-        //LCD_Clear_Async(LCD1);
         print_Stop_Watch(ST_Time);
         break;
     case Mode_EditDateAndTime:
-        //LCD_Clear_Async(LCD1);
-        Print_Edit_Date_And_Time(Current_Digit);
+        Print_Edit_Date_And_Time(Current_Digit, Time, Date);
         break;
     
     default:
@@ -101,6 +98,7 @@ static void Print_Current_Date_And_Time(Date_t Date, Time_t Time)
         break;
     case 19:
         LCD_Set_Cursor_Async(LCD1, 2, 12);
+        break;
     case 20:
         LCD_Write_NUM(LCD1, Date.Y4);
         break;
@@ -245,10 +243,10 @@ static void print_Stop_Watch(StopWatchTime_t Time)
     }
 }
 
-static void Print_Edit_Date_And_Time(u8 Current_Digit)
+static void Print_Edit_Date_And_Time(u8 Current_Digit, Time_t Time, Date_t Date)
 {
-    //Print_Current_Date_And_Time(Date, Time);
-
+    Print_Current_Date_And_Time(Date, Time);
+    
     switch (Current_Digit)
     {
     case H1:
@@ -268,8 +266,9 @@ static void Print_Edit_Date_And_Time(u8 Current_Digit)
         break;
     case S2:
         LCD_Set_Cursor_Async(LCD1, 1, 10);
+        break;
     
-    
+
     case D1:
         LCD_Set_Cursor_Async(LCD1, 2, 3);
         break;
@@ -296,8 +295,56 @@ static void Print_Edit_Date_And_Time(u8 Current_Digit)
         break;
     
     default:
-        LCD_Set_Cursor_Async(LCD1, 1, 1);
         break;
     }
+   
+    // switch (Current_Digit)
+    // {
+    // case H1:
+    //     LCD_Write_NUM(LCD1, Time.H1);
+    //     break;
+    // case H2:
+    //     LCD_Write_NUM(LCD1, Time.H2);
+    //     break;
+    // case M1:
+    //     LCD_Write_NUM(LCD1, Time.M1);
+    //     break;
+    // case M2:
+    //     LCD_Write_NUM(LCD1, Time.M2);
+    //     break;
+    // case S1:
+    //     LCD_Write_NUM(LCD1, Time.S1);
+    //     break;
+    // case S2:
+    //     LCD_Write_NUM(LCD1, Time.S2);
+    //     break;
+
+    // case D1:
+    //     LCD_Write_NUM(LCD1, Date.D1);
+    //     break;
+    // case D2:
+    //     LCD_Write_NUM(LCD1, Date.D2);
+    //     break;
+    // case Mo1:
+    //     LCD_Write_NUM(LCD1, Date.M1);
+    //     break;
+    // case Mo2:
+    //     LCD_Write_NUM(LCD1, Date.M2);
+    //     break;
+    // case Y1:
+    //     LCD_Write_NUM(LCD1, Date.Y1);
+    //     break;
+    // case Y2:
+    //     LCD_Write_NUM(LCD1, Date.Y2);
+    //     break;
+    // case Y3:
+    //     LCD_Write_NUM(LCD1, Date.Y3);
+    //     break;
+    // case Y4:
+    //     LCD_Write_NUM(LCD1, Date.Y4);
+    //     break;
     
+    // default:
+    //     break;
+    // }
 }

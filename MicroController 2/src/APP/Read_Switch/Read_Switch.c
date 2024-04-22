@@ -20,19 +20,21 @@ typedef enum
     _Num_Of_Switches,
 }Switches_t;
 
-u32 Current_State = 0;
+static u32 Last_State[_Num_Of_Switches] = {0};
 static u8 Prev_State    [_Num_Of_Switches] = {0};
 static u8 State         [_Num_Of_Switches] = {0};  
 u8 Counter              [_Num_Of_Switches] = {0};
 
 void HSwitch(void)
 {
-    
+    u8 Current_state=0;
     for (u8 iter = 0; iter < _Num_Of_Switches; ++iter)
     {
-        SWITCH_Get_State(iter , &Current_State);
+        Prev_State[iter] = State[iter];
+
+        SWITCH_Get_State(iter , &Current_state);
         
-        if(Current_State == Prev_State[iter])
+        if(Current_state == Last_State[iter])
         {
             ++Counter[iter];
         }
@@ -41,13 +43,13 @@ void HSwitch(void)
             Counter[iter] = 0;
         }
         
+        Last_State[iter] = Current_state; 
 
         if (Counter[iter] % SAMPLING_NUM == 0)
         {
-            State[iter] = Current_State;
+            Prev_State[iter] = State[iter];
+            State[iter] = Current_state;
         }
-
-        Prev_State[iter] = Current_State;
 
     }
     
@@ -56,25 +58,19 @@ void HSwitch(void)
 void Read_Switch(void)
 {
     
-    if (State[Inc] == Switch_Pressed)
+    if (State[Inc] == Switch_Pressed && Prev_State[Inc] != Switch_Pressed)
     {
         Comm_publish(INC_SWITCH);
     }
     else
-    if (State[Mode] == Switch_Pressed)
+    if (State[Mode] == Switch_Pressed && Prev_State[Mode] != Switch_Pressed)
     {
         Comm_publish(MODE_SWITCH);
     }
     else
-    if (State[Edit] == Switch_Pressed)
+    if (State[Edit] == Switch_Pressed && Prev_State[Edit] != Switch_Pressed)
     {
         Comm_publish(EDIT_SWITCH);
-    }
-
-    // if (State[Reset] == Switch_Pressed)
-    // {
-    //     Comm_publish(RESET_SWITCH);
-    // }
-    
+    }    
 
 }

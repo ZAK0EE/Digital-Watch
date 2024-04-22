@@ -36,7 +36,7 @@ const Sched_runnable_t runnables[_NUM_OF_RUNNABLES] =
     [Update_SW_Run] = 
     {
         .periodicityMS = 50,
-        .firstDelayMS  = 7,
+        .firstDelayMS  = 0,
         .callBack = updateStopWatchTime,
     },
     [HSwtich_Run] =
@@ -61,14 +61,8 @@ const Sched_runnable_t runnables[_NUM_OF_RUNNABLES] =
     },
     [Mode_Dislay_Run] =
     {
-        .periodicityMS = 10,
-        .firstDelayMS = 1000,
+        .periodicityMS = 5,
+        .firstDelayMS = 50,
         .callBack = ModeDisplay,
     },
 };
-
-
-
-
-
-
